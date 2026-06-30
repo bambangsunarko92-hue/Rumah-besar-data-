@@ -12,6 +12,7 @@
 <link rel="manifest" id="app-manifest-link">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;}
 
@@ -284,6 +285,16 @@ body{
   grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
   gap: 12px;
 }
+.kriteria-aksi-wrap{
+  margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.btn-simpan-baris{
+  background:linear-gradient(135deg,#0057b8,#00aaff);color:white;
+  padding:10px 20px;border-radius:8px;font-weight:700;border:none;
+  cursor:pointer;font-size:13px;
+}
+.btn-simpan-baris:hover{background:linear-gradient(135deg,#0066cc,#00ccff);}
+.status-simpan-baris{font-size:12.5px;color:#00c97a;font-weight:700;}
 .btn-grade {
   background: rgba(0,20,55,0.8);
   border: 1px solid rgba(0,150,255,0.3);
@@ -378,6 +389,7 @@ body{
 .viewer-title{font-family:'Orbitron',sans-serif;color:#00d4ff;font-size:14px;}
 .viewer-body{flex:1;padding:24px;overflow-y:auto;}
 .doc-content-display{background:rgba(0,15,50,0.7);border:1px solid rgba(0,150,255,0.2);border-radius:12px;padding:30px;line-height:1.8;}
+#doc-view-content{white-space:pre-wrap;word-wrap:break-word;}
 .doc-edit-area{width:100%;min-height:380px;background:rgba(0,10,40,0.8);border:1px solid rgba(0,212,255,0.3);border-radius:12px;padding:20px;color:#c8e0f5;font-size:14px;outline:none;resize:vertical;}
 .btn-primary{background:linear-gradient(135deg,#0057b8,#00aaff);color:white;padding:10px 20px;border-radius:8px;font-weight:700;border:none;cursor:pointer;}
 .btn-primary:hover{background:linear-gradient(135deg,#0066cc,#00ccff);}
@@ -475,9 +487,10 @@ body{
       <div id="nilai-step-siswa" style="display:none;">
         <button class="btn-secondary" id="btn-back-kelas">⬅ Kembali ke Daftar Kelas</button>
         <h2 class="page-title" id="title-kelas-terpilih" style="margin-top:18px;">Daftar Siswa</h2>
-        <p class="page-desc">Klik nama siswa untuk menampilkan 6 tombol nilai proses di sampingnya. Setelah nilai dipilih, otomatis lanjut ke siswa berikutnya.</p>
+        <p class="page-desc">Klik nama siswa untuk menampilkan 6 tombol nilai proses di sampingnya. Centang nilai yang sesuai, lalu klik tombol Simpan pada baris siswa tersebut.</p>
         <div id="list-siswa-container" class="student-list-container"></div>
-        <div id="nilai-selesai-area" style="margin-top:20px; display:none;">
+        <p class="page-desc" id="info-progres-nilai" style="margin-top:14px;"></p>
+        <div id="nilai-selesai-area" style="margin-top:10px;">
           <button class="btn-primary" id="btn-download-csv-nilai">⬇️ Download Nilai Kelas (CSV)</button>
         </div>
       </div>
@@ -561,6 +574,35 @@ body{
           <h3>C. Edit Instansi</h3>
           <div class="form-group"><label>Nama Sekolah</label><input type="text" id="input-school-name" value="SMP Plus Al Ibanah"></div>
           <div class="form-group"><label>Motto Sekolah</label><input type="text" id="input-school-motto" value="Unggul & Qur'ani"></div>
+        </div>
+        <div class="setting-card" style="grid-column:1/-1;">
+          <h3>D. Upload Daftar Nama Siswa (untuk Nilai Proses)</h3>
+          <p style="font-size:12.5px;color:#4a7a9b;margin-bottom:14px;">Pilih kelas, lalu tempel (paste) daftar nama siswa di kotak bawah ini — satu nama per baris. Daftar nama ini akan otomatis dipakai di menu Nilai Proses untuk kelas yang dipilih, menggantikan daftar nama contoh/lama.</p>
+          <div class="form-group">
+            <label>Pilih Kelas</label>
+            <select id="select-kelas-siswa" style="width:100%;padding:10px;border-radius:8px;background:#040c22;color:#e0f2fe;border:1px solid rgba(0,130,220,0.25);margin-bottom:14px;">
+              <option value="7A">Kelas 7A</option>
+              <option value="7B">Kelas 7B</option>
+              <option value="8A">Kelas 8A</option>
+              <option value="8B">Kelas 8B</option>
+              <option value="9A">Kelas 9A</option>
+              <option value="9B">Kelas 9B</option>
+              <option value="10A">Kelas 10A</option>
+              <option value="10B">Kelas 10B</option>
+              <option value="11A">Kelas 11A</option>
+              <option value="11B">Kelas 11B</option>
+              <option value="12A">Kelas 12A</option>
+              <option value="12B">Kelas 12B</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tempel Daftar Nama Siswa (satu nama per baris)</label>
+            <textarea id="textarea-nama-siswa" class="doc-edit-area" style="min-height:160px;" placeholder="Contoh:&#10;Ahmad Maulana&#10;Budi Santoso&#10;Citra Kirana"></textarea>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <button id="btn-simpan-daftar-siswa" class="btn-primary">💾 Simpan Daftar Siswa Kelas Ini</button>
+            <span id="status-simpan-siswa" style="font-size:12.5px;color:#00c97a;font-weight:700;"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -758,19 +800,75 @@ async function hapusDokumen(doc){
   renderDokumen(document.getElementById('search-cat-dokumen').value);
 }
 
+// Membaca isi asli file Word (.docx) menjadi teks menggunakan mammoth.js
+function bacaIsiDocx(file){
+  return new Promise((resolve)=>{
+    const reader = new FileReader();
+    reader.onload = function(e){
+      mammoth.extractRawText({ arrayBuffer: e.target.result })
+        .then(result => resolve(result.value && result.value.trim() ? result.value : '(Dokumen Word ini kosong)'))
+        .catch(err => { console.error('Gagal membaca docx', err); resolve('⚠️ File tersimpan, tapi isinya gagal dibaca otomatis. Anda bisa menulis ulang isinya lewat tombol Edit.'); });
+    };
+    reader.onerror = () => resolve('⚠️ File tersimpan, tapi gagal dibaca otomatis. Anda bisa menulis ulang isinya lewat tombol Edit.');
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Membaca isi asli file PDF menjadi teks menggunakan pdf.js
+function bacaIsiPdf(file){
+  return new Promise((resolve)=>{
+    if(window.pdfjsLib){
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const reader = new FileReader();
+    reader.onload = async function(e){
+      try{
+        if(!window.pdfjsLib) throw new Error('pdf.js belum termuat');
+        const pdf = await pdfjsLib.getDocument({ data: e.target.result }).promise;
+        let teksLengkap = '';
+        for(let p=1; p<=pdf.numPages; p++){
+          const page = await pdf.getPage(p);
+          const content = await page.getTextContent();
+          const teksHalaman = content.items.map(item=>item.str).join(' ');
+          teksLengkap += `--- Halaman ${p} ---\n${teksHalaman}\n\n`;
+        }
+        resolve(teksLengkap.trim() || '(Dokumen PDF ini kosong atau berupa hasil scan/gambar sehingga tidak ada teks yang terbaca)');
+      }catch(err){
+        console.error('Gagal membaca pdf', err);
+        resolve('⚠️ File tersimpan, tapi isinya gagal dibaca otomatis (mungkin PDF hasil scan/gambar). Anda bisa menulis ulang isinya lewat tombol Edit.');
+      }
+    };
+    reader.onerror = () => resolve('⚠️ File tersimpan, tapi gagal dibaca otomatis. Anda bisa menulis ulang isinya lewat tombol Edit.');
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Tentukan cara membaca isi file berdasarkan jenisnya
+async function bacaIsiFile(file){
+  const namaLower = file.name.toLowerCase();
+  if(namaLower.endsWith('.docx')) return await bacaIsiDocx(file);
+  if(namaLower.endsWith('.pdf')) return await bacaIsiPdf(file);
+  // Jenis file lain (xlsx, pptx, gambar, .doc lama, dll): belum bisa dibaca otomatis isinya.
+  // File tetap tersimpan dan namanya tetap tercatat, hanya isinya berupa keterangan ini.
+  return `📁 File "${file.name}" sudah tersimpan permanen. Pratinjau isi otomatis saat ini hanya tersedia untuk file Word (.docx) dan PDF. Anda bisa menulis catatan/ringkasan dokumen ini lewat tombol Edit.`;
+}
+
 document.getElementById('file-upload').addEventListener('change', async function(){
   let cat=document.getElementById('upload-category').value;
+  const statusEl = document.getElementById('upload-status');
   if(this.files.length){
     let count=0;
+    statusEl.textContent = `⏳ Membaca dan menyimpan ${this.files.length} file, mohon tunggu sebentar...`;
     for(let i=0;i<this.files.length;i++){
       const f=this.files[i];
-      const doc={ id:generateDocId(), nama:f.name, kategori:cat, isi:'Konten file '+f.name+' siap diedit.' };
+      const isiFile = await bacaIsiFile(f);
+      const doc={ id:generateDocId(), nama:f.name, kategori:cat, isi:isiFile };
       databaseDokumen.push(doc);
       await dbSetDoc(doc.id, doc);
       count++;
     }
-    document.getElementById('upload-status').textContent=`✅ ${count} file masuk ke ${cat} dan tersimpan permanen!`;
-    setTimeout(()=>document.getElementById('upload-status').textContent='',3000);
+    statusEl.textContent=`✅ ${count} file masuk ke ${cat}, isinya sudah terbaca otomatis (untuk Word/PDF) dan tersimpan permanen!`;
+    setTimeout(()=>statusEl.textContent='',4000);
     this.value='';
   }
 });
@@ -782,10 +880,12 @@ let activeDocId=null, isEdit=false;
 function getDocById(id){ return databaseDokumen.find(d=>d.id===id); }
 
 function openDocViewer(doc,startEdit){
+  if(!doc){ alert('Dokumen ini tidak ditemukan (mungkin sudah dihapus). Silakan tutup dan coba lagi.'); return; }
   activeDocId=doc.id; isEdit=startEdit;
+  const isiTampil = (doc.isi && doc.isi.toString().trim()) ? doc.isi : '(Dokumen ini belum memiliki isi. Klik Edit untuk menambahkan catatan/isi.)';
   document.getElementById('viewer-doc-title').textContent=doc.nama; document.getElementById('doc-view-title').textContent=doc.nama;
-  if(isEdit){ vArea.value=doc.isi; vMode.style.display='none'; vArea.style.display='block'; eActions.style.display='flex'; tEdit.textContent='👁 Lihat'; }
-  else { document.getElementById('doc-view-content').textContent=doc.isi; vMode.style.display='block'; vArea.style.display='none'; eActions.style.display='none'; tEdit.textContent='✏️ Edit'; }
+  if(isEdit){ vArea.value=doc.isi||''; vMode.style.display='none'; vArea.style.display='block'; eActions.style.display='flex'; tEdit.textContent='👁 Lihat'; }
+  else { document.getElementById('doc-view-content').textContent=isiTampil; vMode.style.display='block'; vArea.style.display='none'; eActions.style.display='none'; tEdit.textContent='✏️ Edit'; }
   dViewer.style.display='flex';
 }
 tEdit.onclick=()=>{ openDocViewer(getDocById(activeDocId),!isEdit); };
@@ -802,8 +902,8 @@ document.getElementById('btn-save-doc').onclick=async ()=>{
    LOGIKA BARU: NILAI PROSES (SESUAI SOP 12 KELAS) 
    ========================================================= */
 
-// Data Dummy Siswa
-const databaseSiswa = {
+// Data Dummy Siswa (akan ditimpa otomatis jika guru sudah upload daftar nama asli lewat menu Pengaturan)
+let databaseSiswa = {
   "7A": ["Ahmad Maulana", "Budi Santoso", "Citra Kirana", "Dedi Hermawan", "Eka Putri"],
   "7B": ["Fajar Nugraha", "Gita Savitri", "Hadi Pratama"],
   "8A": ["Indah Permata", "Joko Susilo", "Kurniawan"],
@@ -859,11 +959,7 @@ function siswaSudahLengkapDinilai(nama){
   return !!data && Object.keys(data).length === kriteriaSOPLabel.length;
 }
 
-function semuaSiswaSudahDinilai(){
-  return daftarSiswaAktif.length>0 && daftarSiswaAktif.every(siswaSudahLengkapDinilai);
-}
-
-// 2. Tampilkan Daftar Siswa, masing-masing baris bisa expand 6 tombol nilai
+// 2. Tampilkan Daftar Siswa, masing-masing baris bisa expand 6 tombol nilai + tombol Simpan
 function renderDaftarSiswa(expandedNama) {
   listSiswaContainer.innerHTML = '';
   const tingkatAngka = kelasAktif.match(/\d+/)[0];
@@ -900,38 +996,65 @@ function renderDaftarSiswa(expandedNama) {
       btn.className = 'btn-grade';
       if (rekapNilaiSiswa[keySiswa][i]) btn.classList.add('selected');
       btn.innerHTML = `<span class="grade-num">${nilaiSOP[i]}</span><span class="grade-lbl">${namaKriteria}</span>`;
-      btn.onclick = async () => {
+      btn.onclick = () => {
         btn.classList.toggle('selected');
         if (btn.classList.contains('selected')) {
           rekapNilaiSiswa[keySiswa][i] = nilaiSOP[i];
         } else {
           delete rekapNilaiSiswa[keySiswa][i];
         }
-        await simpanRekapNilai();
-        btnSiswa.classList.toggle('sudah-dinilai', siswaSudahLengkapDinilai(nama));
-
-        // Jika seluruh 6 kriteria sudah dipilih, otomatis lanjut ke siswa berikutnya
-        if (siswaSudahLengkapDinilai(nama)) {
-          if (index < daftarSiswaAktif.length - 1) {
-            const namaBerikutnya = daftarSiswaAktif[index + 1];
-            renderDaftarSiswa(namaBerikutnya);
-            const rowBerikutnya = listSiswaContainer.children[index + 1];
-            if (rowBerikutnya) rowBerikutnya.scrollIntoView({ behavior:'smooth', block:'center' });
-          } else {
-            renderDaftarSiswa(null);
-          }
-        }
+        statusSimpanBaris.textContent = '';
       };
       grid.appendChild(btn);
     });
 
     kriteriaWrap.appendChild(grid);
+
+    // Area tombol Simpan + status, untuk siswa ini
+    const aksiWrap = document.createElement('div');
+    aksiWrap.className = 'kriteria-aksi-wrap';
+
+    const btnSimpanBaris = document.createElement('button');
+    btnSimpanBaris.className = 'btn-simpan-baris';
+    btnSimpanBaris.textContent = '💾 Simpan Nilai';
+
+    const statusSimpanBaris = document.createElement('span');
+    statusSimpanBaris.className = 'status-simpan-baris';
+
+    btnSimpanBaris.onclick = async () => {
+      await simpanRekapNilai();
+      btnSiswa.classList.toggle('sudah-dinilai', siswaSudahLengkapDinilai(nama));
+      statusSimpanBaris.textContent = '✅ Tersimpan!';
+      tampilkanInfoProgres();
+
+      // Setelah disimpan, otomatis pindah & buka baris siswa berikutnya (jika ada)
+      setTimeout(() => {
+        if (index < daftarSiswaAktif.length - 1) {
+          const namaBerikutnya = daftarSiswaAktif[index + 1];
+          renderDaftarSiswa(namaBerikutnya);
+          const rowBerikutnya = listSiswaContainer.children[index + 1];
+          if (rowBerikutnya) rowBerikutnya.scrollIntoView({ behavior:'smooth', block:'center' });
+        } else {
+          renderDaftarSiswa(null);
+        }
+      }, 500);
+    };
+
+    aksiWrap.appendChild(btnSimpanBaris);
+    aksiWrap.appendChild(statusSimpanBaris);
+    kriteriaWrap.appendChild(aksiWrap);
+
     row.appendChild(kriteriaWrap);
     listSiswaContainer.appendChild(row);
   });
 
-  // Tampilkan tombol download CSV jika seluruh siswa di kelas ini sudah dinilai lengkap
-  nilaiSelesaiArea.style.display = semuaSiswaSudahDinilai() ? 'block' : 'none';
+  tampilkanInfoProgres();
+}
+
+function tampilkanInfoProgres(){
+  const jumlahSelesai = daftarSiswaAktif.filter(siswaSudahLengkapDinilai).length;
+  document.getElementById('info-progres-nilai').textContent =
+    `📊 ${jumlahSelesai} dari ${daftarSiswaAktif.length} siswa sudah dinilai lengkap (6/6 kriteria). Anda bisa download CSV kapan saja, walau belum semua selesai dinilai.`;
 }
 
 // 3. Tombol Navigasi
@@ -1026,6 +1149,43 @@ document.getElementById('input-link-siswa').addEventListener('input', function()
 document.getElementById('input-link-guru').addEventListener('input', function(){ dbSet('link_guru', this.value); });
 
 /* =========================================================
+   UPLOAD DAFTAR NAMA SISWA MANUAL (per kelas) UNTUK NILAI PROSES
+   ========================================================= */
+const selectKelasSiswa = document.getElementById('select-kelas-siswa');
+const textareaNamaSiswa = document.getElementById('textarea-nama-siswa');
+const statusSimpanSiswa = document.getElementById('status-simpan-siswa');
+
+function tampilkanNamaSiswaUntukKelasTerpilih(){
+  const kelas = selectKelasSiswa.value;
+  const daftar = databaseSiswa[kelas] || [];
+  textareaNamaSiswa.value = daftar.join('\n');
+}
+selectKelasSiswa.addEventListener('change', tampilkanNamaSiswaUntukKelasTerpilih);
+
+document.getElementById('btn-simpan-daftar-siswa').onclick = async () => {
+  const kelas = selectKelasSiswa.value;
+  // Pecah per baris, buang baris kosong dan spasi berlebih di awal/akhir tiap nama
+  const daftarNama = textareaNamaSiswa.value
+    .split('\n')
+    .map(n => n.trim())
+    .filter(n => n.length > 0);
+
+  if(daftarNama.length === 0){
+    statusSimpanSiswa.style.color = '#ff6b6b';
+    statusSimpanSiswa.textContent = '⚠️ Daftar nama masih kosong, tidak ada yang disimpan.';
+    setTimeout(()=>statusSimpanSiswa.textContent='', 3000);
+    return;
+  }
+
+  databaseSiswa[kelas] = daftarNama;
+  await dbSet('databaseSiswa', databaseSiswa);
+
+  statusSimpanSiswa.style.color = '#00c97a';
+  statusSimpanSiswa.textContent = `✅ ${daftarNama.length} nama siswa kelas ${kelas} tersimpan permanen!`;
+  setTimeout(()=>statusSimpanSiswa.textContent='', 3000);
+};
+
+/* =========================================================
    INISIALISASI: muat seluruh data permanen saat aplikasi dibuka
    ========================================================= */
 async function muatSeluruhDataPermanen(){
@@ -1034,6 +1194,13 @@ async function muatSeluruhDataPermanen(){
 
   // Rekap nilai proses
   await muatRekapNilai();
+
+  // Daftar nama siswa per kelas (jika guru pernah upload manual sebelumnya)
+  const siswaTersimpan = await dbGet('databaseSiswa');
+  if(siswaTersimpan && Object.keys(siswaTersimpan).length){
+    databaseSiswa = { ...databaseSiswa, ...siswaTersimpan };
+  }
+  tampilkanNamaSiswaUntukKelasTerpilih();
 
   // Jadwal
   const jadwalTersimpan = await dbGet('databaseJadwal');
