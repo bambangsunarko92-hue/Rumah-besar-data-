@@ -227,7 +227,6 @@ body{
    STYLE KHUSUS FITUR NILAI PROSES
    ========================================================= */
 
-/* Daftar Siswa */
 .student-list-container {
   display: flex;
   flex-direction: column;
@@ -272,7 +271,6 @@ body{
   text-shadow: 0 0 8px rgba(0,201,122,0.4);
 }
 
-/* 6 Tombol Kriteria SOP - tampil expand di bawah/samping nama siswa */
 .kriteria-inline-wrap{
   display:none;
   padding: 16px 20px 20px;
@@ -487,7 +485,7 @@ body{
       <div id="nilai-step-siswa" style="display:none;">
         <button class="btn-secondary" id="btn-back-kelas">⬅ Kembali ke Daftar Kelas</button>
         <h2 class="page-title" id="title-kelas-terpilih" style="margin-top:18px;">Daftar Siswa</h2>
-        <p class="page-desc">Klik nama siswa untuk menampilkan 6 tombol nilai proses di sampingnya. Centang nilai yang sesuai, lalu klik tombol Simpan pada baris siswa tersebut.</p>
+        <p class="page-desc">Klik nama siswa untuk menampilkan 6 tombol nilai proses di sampingnya. Pilih SATU nilai yang sesuai, lalu klik tombol Simpan pada baris siswa tersebut.</p>
         <div id="list-siswa-container" class="student-list-container"></div>
         <p class="page-desc" id="info-progres-nilai" style="margin-top:14px;"></p>
         <div id="nilai-selesai-area" style="margin-top:10px;">
@@ -633,10 +631,7 @@ body{
 
 <script>
 /* =========================================================
-   LAPISAN PENYIMPANAN PERMANEN (IndexedDB)
-   Semua data (dokumen, jadwal, nilai, pengaturan, link)
-   disimpan permanen di perangkat, tidak hilang saat aplikasi
-   ditutup/dibuka kembali, dan tetap bisa diakses offline.
+   LAPISAN PENYIMPANAN PERMANEN (IndexedDB) — TIDAK DIUBAH
    ========================================================= */
 const DB_NAME = 'BukuKerjaGuruDB';
 const DB_VERSION = 1;
@@ -676,7 +671,6 @@ function dbGet(key){
   })).catch(err=>{ console.error('Gagal membaca data', key, err); return undefined; });
 }
 
-// Helper khusus dokumen: tiap dokumen disimpan dengan key sendiri agar efisien
 function dbSetDoc(id, doc){ return dbSet('doc_'+id, doc); }
 function dbDeleteDoc(id){
   return openAppDB().then(db=> new Promise((resolve, reject)=>{
@@ -698,47 +692,224 @@ function dbGetAllDocs(){
   })).catch(err=>{ console.error('Gagal memuat seluruh dokumen', err); return []; });
 }
 
-/* --- SPACE CANVAS --- */
+/* =========================================================
+   SPACE CANVAS — PERUBAHAN KE-2: PLANET LEBIH NYATA/3D
+   ========================================================= */
 (function(){
   const canvas = document.getElementById('space-canvas');
   const ctx = canvas.getContext('2d');
-  let W=canvas.width=window.innerWidth, H=canvas.height=window.innerHeight;
-  let stars=[], planets=[];
-  window.addEventListener('resize', ()=>{ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; });
-  for(let i=0;i<180;i++) stars.push({x:Math.random()*2000, y:Math.random()*1200, r:Math.random()*1.2, a:Math.random(), da:Math.random()*0.005+0.001});
-  const defs=[{cx:0.5,cy:0.5,or:0.35,ang:0,sp:0.0006,r:40,col:'#1a3a8a',ring:true},{cx:0.5,cy:0.5,or:0.6,ang:2,sp:0.0004,r:26,col:'#6b1a6b'},{cx:0.5,cy:0.5,or:0.8,ang:4,sp:0.0003,r:30,col:'#0d4a3a'}];
-  defs.forEach(d=>planets.push({...d}));
+  let W = canvas.width = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', ()=>{
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  });
+
+  // Bintang — TIDAK DIUBAH
+  let stars = [];
+  for(let i = 0; i < 180; i++){
+    stars.push({
+      x: Math.random() * 2000,
+      y: Math.random() * 1200,
+      r: Math.random() * 1.2,
+      a: Math.random(),
+      da: Math.random() * 0.005 + 0.001
+    });
+  }
+
+  // Definisi planet dengan warna, tekstur, dan cincin yang lebih realistis
+  const planetDefs = [
+    {
+      // Planet biru besar (seperti Neptunus) — orbit sedang
+      cx: 0.5, cy: 0.5, or: 0.35, ang: 0, sp: 0.0006,
+      r: 40,
+      colors: ['#1a5fa8', '#2e86c1', '#1a3a8a', '#0d2257'],
+      highlight: 'rgba(100,180,255,0.35)',
+      shadow: 'rgba(0,5,30,0.85)',
+      hasRing: false,
+      spots: [{cx:-0.2,cy:-0.1,r:0.25,col:'rgba(255,255,255,0.07)'},{cx:0.1,cy:0.2,r:0.18,col:'rgba(255,255,255,0.05)'}]
+    },
+    {
+      // Planet ungu (seperti saturnus) — orbit kecil, PUNYA CINCIN
+      cx: 0.5, cy: 0.5, or: 0.6, ang: 2, sp: 0.0004,
+      r: 26,
+      colors: ['#6b1a6b', '#9b2d9b', '#4a0f4a', '#2d0a2d'],
+      highlight: 'rgba(200,100,255,0.35)',
+      shadow: 'rgba(20,0,30,0.85)',
+      hasRing: true,
+      ringColor: 'rgba(160,80,200,0.45)',
+      ringColor2: 'rgba(100,40,140,0.2)',
+      spots: [{cx:0.15,cy:-0.15,r:0.22,col:'rgba(255,200,255,0.08)'}]
+    },
+    {
+      // Planet hijau toska (seperti Uranus) — orbit lebar
+      cx: 0.5, cy: 0.5, or: 0.8, ang: 4, sp: 0.0003,
+      r: 30,
+      colors: ['#0d5c4a', '#14876d', '#0a4035', '#061f1a'],
+      highlight: 'rgba(50,220,180,0.3)',
+      shadow: 'rgba(0,15,10,0.85)',
+      hasRing: false,
+      spots: [{cx:-0.1,cy:0.1,r:0.3,col:'rgba(100,255,200,0.06)'},{cx:0.2,cy:-0.2,r:0.2,col:'rgba(100,255,200,0.05)'}]
+    }
+  ];
+
+  let planets = planetDefs.map(d => ({...d}));
+
+  // Fungsi menggambar planet 3D
+  function drawPlanet(p){
+    const mx = Math.max(W, H);
+    const cx = p.cx * W + Math.cos(p.ang) * p.or * mx;
+    const cy = p.cy * H + Math.sin(p.ang) * p.or * mx * 0.5;
+    const r = p.r;
+
+    // --- Glow aura di luar planet ---
+    const aura = ctx.createRadialGradient(cx, cy, r * 0.5, cx, cy, r * 2.8);
+    aura.addColorStop(0, p.colors[1] + '33');
+    aura.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 2.8, 0, Math.PI * 2);
+    ctx.fillStyle = aura;
+    ctx.fill();
+
+    // --- Cincin planet (digambar SEBELUM bola agar sebagian tertutup planet) ---
+    if(p.hasRing){
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(1, 0.32); // pipihkan jadi elips
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 2.2, 0, Math.PI * 2);
+      const ringGrd = ctx.createRadialGradient(0, 0, r * 1.1, 0, 0, r * 2.2);
+      ringGrd.addColorStop(0, p.ringColor);
+      ringGrd.addColorStop(0.5, p.ringColor2);
+      ringGrd.addColorStop(1, 'transparent');
+      ctx.fillStyle = ringGrd;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // --- Bola planet utama (gradient radial 3D) ---
+    const grad = ctx.createRadialGradient(
+      cx - r * 0.3, cy - r * 0.3, r * 0.05,  // titik cahaya (kiri atas)
+      cx, cy, r
+    );
+    grad.addColorStop(0, p.colors[1]);    // warna terang
+    grad.addColorStop(0.4, p.colors[0]);  // warna utama
+    grad.addColorStop(0.75, p.colors[2]); // warna gelap
+    grad.addColorStop(1, p.colors[3]);    // warna sangat gelap di tepi
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // --- Garis-garis atmosfer (pita horizontal) ---
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+    for(let band = -1; band <= 3; band++){
+      const by = cy + (band - 1.5) * r * 0.45;
+      const bh = r * 0.13;
+      ctx.beginPath();
+      ctx.ellipse(cx, by, r, bh, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.035)';
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // --- Bintik/spot di permukaan ---
+    if(p.spots){
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+      p.spots.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(cx + s.cx * r, cy + s.cy * r, s.r * r, 0, Math.PI * 2);
+        ctx.fillStyle = s.col;
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    // --- Highlight (pantulan cahaya di kiri atas) ---
+    const hl = ctx.createRadialGradient(
+      cx - r * 0.35, cy - r * 0.35, 0,
+      cx - r * 0.35, cy - r * 0.35, r * 0.65
+    );
+    hl.addColorStop(0, p.highlight);
+    hl.addColorStop(1, 'transparent');
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = hl;
+    ctx.fill();
+    ctx.restore();
+
+    // --- Bayangan (shadow di kanan bawah untuk efek 3D) ---
+    const sh = ctx.createRadialGradient(
+      cx + r * 0.35, cy + r * 0.35, r * 0.1,
+      cx + r * 0.35, cy + r * 0.35, r * 1.1
+    );
+    sh.addColorStop(0, p.shadow);
+    sh.addColorStop(1, 'transparent');
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = sh;
+    ctx.fill();
+    ctx.restore();
+
+    // --- Tepi planet (rim/outline tipis) ---
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = p.colors[1] + '55';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
 
   function draw(){
-    ctx.clearRect(0,0,W,H);
-    const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H));
-    bg.addColorStop(0,'#05102a'); bg.addColorStop(1,'#00020f');
-    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0, 0, W, H);
 
-    stars.forEach(s=>{
-      s.a+=s.da; if(s.a>1||s.a<0) s.da*=-1; ctx.globalAlpha=s.a;
-      ctx.beginPath(); ctx.arc(s.x%W,s.y%H,s.r,0,Math.PI*2); ctx.fillStyle='#e0f2fe'; ctx.fill();
+    // Background gradient — TIDAK DIUBAH
+    const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H));
+    bg.addColorStop(0, '#05102a');
+    bg.addColorStop(1, '#00020f');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Bintang — TIDAK DIUBAH
+    stars.forEach(s => {
+      s.a += s.da;
+      if(s.a > 1 || s.a < 0) s.da *= -1;
+      ctx.globalAlpha = s.a;
+      ctx.beginPath();
+      ctx.arc(s.x % W, s.y % H, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#e0f2fe';
+      ctx.fill();
     });
-    ctx.globalAlpha=1;
+    ctx.globalAlpha = 1;
 
-    planets.forEach(p=>{
-      p.ang+=p.sp;
-      let mx=Math.max(W,H);
-      let cx=p.cx*W+Math.cos(p.ang)*p.or*mx;
-      let cy=p.cy*H+Math.sin(p.ang)*p.or*mx*0.5;
-      
-      let grd=ctx.createRadialGradient(cx,cy,p.r*0.2,cx,cy,p.r*2);
-      grd.addColorStop(0,p.col+'66'); grd.addColorStop(1,'transparent');
-      ctx.beginPath(); ctx.arc(cx,cy,p.r*2,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
-
-      ctx.beginPath(); ctx.arc(cx,cy,p.r,0,Math.PI*2); ctx.fillStyle=p.col; ctx.fill();
+    // Planet 3D
+    planets.forEach(p => {
+      p.ang += p.sp;
+      drawPlanet(p);
     });
+
     requestAnimationFrame(draw);
   }
+
   draw();
 })();
 
-/* --- NAVIGASI UTAMA --- */
+/* --- NAVIGASI UTAMA — TIDAK DIUBAH --- */
 const landing=document.getElementById('landing'), appPanel=document.getElementById('app-panel'), btnHome=document.getElementById('btn-home'), currentTitle=document.getElementById('current-page-title');
 const pageNames={'page-dashboard':'Dashboard','page-nilai':'Nilai Proses','page-dokumen':'Upload Dokumen','page-jadwal':'Jadwal Pelajaran','page-pangkalan':'Pangkalan Data','page-pengaturan':'Pengaturan'};
 
@@ -752,13 +923,12 @@ document.querySelectorAll('.menu-orb').forEach(orb=>{
 });
 btnHome.addEventListener('click', ()=>{ appPanel.style.display='none'; landing.style.display='flex'; });
 
-/* --- DASHBOARD & UPLOAD --- */
+/* --- DASHBOARD & UPLOAD — TIDAK DIUBAH --- */
 let databaseDokumen=[]; let activeCategory='';
 const dbCat=document.getElementById('dashboard-categories'), dbDet=document.getElementById('dashboard-detail'), detList=document.getElementById('detail-doc-list');
 
 function generateDocId(){ return 'd_'+Date.now()+'_'+Math.random().toString(36).slice(2,9); }
 
-// Muat seluruh dokumen tersimpan dari IndexedDB saat aplikasi dibuka
 async function muatDatabaseDokumen(){
   databaseDokumen = await dbGetAllDocs();
 }
@@ -800,7 +970,6 @@ async function hapusDokumen(doc){
   renderDokumen(document.getElementById('search-cat-dokumen').value);
 }
 
-// Membaca isi asli file Word (.docx) menjadi teks menggunakan mammoth.js
 function bacaIsiDocx(file){
   return new Promise((resolve)=>{
     const reader = new FileReader();
@@ -814,7 +983,6 @@ function bacaIsiDocx(file){
   });
 }
 
-// Membaca isi asli file PDF menjadi teks menggunakan pdf.js
 function bacaIsiPdf(file){
   return new Promise((resolve)=>{
     if(window.pdfjsLib){
@@ -843,13 +1011,10 @@ function bacaIsiPdf(file){
   });
 }
 
-// Tentukan cara membaca isi file berdasarkan jenisnya
 async function bacaIsiFile(file){
   const namaLower = file.name.toLowerCase();
   if(namaLower.endsWith('.docx')) return await bacaIsiDocx(file);
   if(namaLower.endsWith('.pdf')) return await bacaIsiPdf(file);
-  // Jenis file lain (xlsx, pptx, gambar, .doc lama, dll): belum bisa dibaca otomatis isinya.
-  // File tetap tersimpan dan namanya tetap tercatat, hanya isinya berupa keterangan ini.
   return `📁 File "${file.name}" sudah tersimpan permanen. Pratinjau isi otomatis saat ini hanya tersedia untuk file Word (.docx) dan PDF. Anda bisa menulis catatan/ringkasan dokumen ini lewat tombol Edit.`;
 }
 
@@ -873,7 +1038,7 @@ document.getElementById('file-upload').addEventListener('change', async function
   }
 });
 
-/* --- VIEWER & EDIT --- */
+/* --- VIEWER & EDIT — TIDAK DIUBAH --- */
 const dViewer=document.getElementById('doc-viewer'), vArea=document.getElementById('doc-edit-area'), vMode=document.getElementById('doc-view-mode'), eActions=document.getElementById('edit-actions'), tEdit=document.getElementById('btn-toggle-edit');
 let activeDocId=null, isEdit=false;
 
@@ -899,18 +1064,18 @@ document.getElementById('btn-save-doc').onclick=async ()=>{
 };
 
 /* =========================================================
-   LOGIKA BARU: NILAI PROSES (SESUAI SOP 12 KELAS) 
+   NILAI PROSES — PERUBAHAN KE-1:
+   - Tombol menjadi PILIH SATU (radio behavior)
+   - CSV hanya 4 kolom: No, Nama, Nilai, Keterangan
    ========================================================= */
 
-// Data Dummy Siswa (akan ditimpa otomatis jika guru sudah upload daftar nama asli lewat menu Pengaturan)
 let databaseSiswa = {
   "7A": ["Ahmad Maulana", "Budi Santoso", "Citra Kirana", "Dedi Hermawan", "Eka Putri"],
   "7B": ["Fajar Nugraha", "Gita Savitri", "Hadi Pratama"],
   "8A": ["Indah Permata", "Joko Susilo", "Kurniawan"],
-  "12A": ["Reza Rahadian", "Syifa Hadju", "Vanesha Prescilla"] // Contoh tambahan
+  "12A": ["Reza Rahadian", "Syifa Hadju", "Vanesha Prescilla"]
 };
 
-// Data Tabel SOP yang Anda berikan -- TIDAK DIUBAH, sesuai SOP resmi
 const kriteriaSOPLabel = ["Kehadiran", "Bersikap Baik", "Siap", "Termotivasi", "Interaktif", "Membantu"];
 const sopBerdasarkanTingkat = {
   "7": [75, 77, 79, 81, 83, 85],
@@ -921,45 +1086,41 @@ const sopBerdasarkanTingkat = {
   "12": [70, 76, 82, 88, 94, 98]
 };
 
-// Variabel pelacakan
 let kelasAktif = "";
 let daftarSiswaAktif = [];
-let rekapNilaiSiswa = {}; // Format: { "7A_Ahmad Maulana": { 0: 75, 2: 79 } } (kriteria index -> nilai SOP)
 
-// Muat rekap nilai tersimpan dari penyimpanan permanen
+// PERUBAHAN: Format rekap nilai sekarang simpan SATU nilai saja per siswa
+// Format: { "8A_Ahmad": { nilai: 84, keterangan: "Termotivasi" } }
+let rekapNilaiSiswa = {};
+
 async function muatRekapNilai(){
   const saved = await dbGet('rekapNilaiSiswa');
   rekapNilaiSiswa = saved || {};
 }
 function simpanRekapNilai(){ return dbSet('rekapNilaiSiswa', rekapNilaiSiswa); }
 
-// Elemen DOM Nilai
 const stepKelas = document.getElementById('nilai-step-kelas');
 const stepSiswa = document.getElementById('nilai-step-siswa');
 const listSiswaContainer = document.getElementById('list-siswa-container');
-const nilaiSelesaiArea = document.getElementById('nilai-selesai-area');
 
-// 1. Saat Kelas Diklik
 document.querySelectorAll('.kelas-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     kelasAktif = this.dataset.kelas;
     daftarSiswaAktif = databaseSiswa[kelasAktif] || ["Siswa Contoh 1", "Siswa Contoh 2", "Siswa Contoh 3"];
-
     document.getElementById('title-kelas-terpilih').textContent = `Daftar Siswa Kelas ${kelasAktif}`;
     stepKelas.style.display = 'none';
     stepSiswa.style.display = 'block';
-
     renderDaftarSiswa();
   });
 });
 
-function siswaSudahLengkapDinilai(nama){
+function siswaSudahDinilai(nama){
   const keySiswa = kelasAktif + "_" + nama;
   const data = rekapNilaiSiswa[keySiswa];
-  return !!data && Object.keys(data).length === kriteriaSOPLabel.length;
+  // Cukup punya 1 nilai saja sudah dianggap selesai
+  return !!(data && data.nilai !== undefined);
 }
 
-// 2. Tampilkan Daftar Siswa, masing-masing baris bisa expand 6 tombol nilai + tombol Simpan
 function renderDaftarSiswa(expandedNama) {
   listSiswaContainer.innerHTML = '';
   const tingkatAngka = kelasAktif.match(/\d+/)[0];
@@ -971,46 +1132,53 @@ function renderDaftarSiswa(expandedNama) {
 
     const row = document.createElement('div');
     row.className = 'siswa-row';
-    if (nama === expandedNama) row.classList.add('expanded','aktif');
+    if (nama === expandedNama) row.classList.add('expanded', 'aktif');
 
     const btnSiswa = document.createElement('button');
     btnSiswa.className = 'btn-siswa';
-    if (siswaSudahLengkapDinilai(nama)) btnSiswa.classList.add('sudah-dinilai');
+    if (siswaSudahDinilai(nama)) btnSiswa.classList.add('sudah-dinilai');
     btnSiswa.textContent = `${index + 1}. ${nama}`;
     btnSiswa.onclick = () => {
-      // Jika row yang sama diklik lagi, tutup. Jika row lain, buka itu (tutup yang lain).
       const sedangTerbuka = row.classList.contains('expanded');
       renderDaftarSiswa(sedangTerbuka ? null : nama);
     };
 
     row.appendChild(btnSiswa);
 
-    // 6 Tombol kriteria SOP, expand inline di bawah nama siswa yang diklik
     const kriteriaWrap = document.createElement('div');
     kriteriaWrap.className = 'kriteria-inline-wrap';
     const grid = document.createElement('div');
     grid.className = 'grade-options';
 
+    // PERUBAHAN: Tombol sekarang RADIO — hanya satu yang bisa selected
+    const nilaiTersimpan = rekapNilaiSiswa[keySiswa].nilai;
+    const allBtns = []; // kumpulkan semua btn untuk deselect yang lain
+
     kriteriaSOPLabel.forEach((namaKriteria, i) => {
       const btn = document.createElement('button');
       btn.className = 'btn-grade';
-      if (rekapNilaiSiswa[keySiswa][i]) btn.classList.add('selected');
+
+      // Tandai tombol yang sudah tersimpan sebagai selected
+      if (nilaiTersimpan === nilaiSOP[i]) btn.classList.add('selected');
+
       btn.innerHTML = `<span class="grade-num">${nilaiSOP[i]}</span><span class="grade-lbl">${namaKriteria}</span>`;
+
       btn.onclick = () => {
-        btn.classList.toggle('selected');
-        if (btn.classList.contains('selected')) {
-          rekapNilaiSiswa[keySiswa][i] = nilaiSOP[i];
-        } else {
-          delete rekapNilaiSiswa[keySiswa][i];
-        }
+        // Deselect semua tombol lain dulu (radio behavior)
+        allBtns.forEach(b => b.classList.remove('selected'));
+        // Select tombol yang diklik
+        btn.classList.add('selected');
+        // Simpan ke rekap: nilai dan keterangan
+        rekapNilaiSiswa[keySiswa] = { nilai: nilaiSOP[i], keterangan: namaKriteria };
         statusSimpanBaris.textContent = '';
       };
+
+      allBtns.push(btn);
       grid.appendChild(btn);
     });
 
     kriteriaWrap.appendChild(grid);
 
-    // Area tombol Simpan + status, untuk siswa ini
     const aksiWrap = document.createElement('div');
     aksiWrap.className = 'kriteria-aksi-wrap';
 
@@ -1022,18 +1190,24 @@ function renderDaftarSiswa(expandedNama) {
     statusSimpanBaris.className = 'status-simpan-baris';
 
     btnSimpanBaris.onclick = async () => {
+      // Validasi: pastikan guru sudah memilih satu nilai
+      if(!rekapNilaiSiswa[keySiswa] || rekapNilaiSiswa[keySiswa].nilai === undefined){
+        statusSimpanBaris.style.color = '#ff6b6b';
+        statusSimpanBaris.textContent = '⚠️ Pilih satu nilai dahulu!';
+        return;
+      }
       await simpanRekapNilai();
-      btnSiswa.classList.toggle('sudah-dinilai', siswaSudahLengkapDinilai(nama));
+      btnSiswa.classList.toggle('sudah-dinilai', siswaSudahDinilai(nama));
+      statusSimpanBaris.style.color = '#00c97a';
       statusSimpanBaris.textContent = '✅ Tersimpan!';
       tampilkanInfoProgres();
 
-      // Setelah disimpan, otomatis pindah & buka baris siswa berikutnya (jika ada)
       setTimeout(() => {
         if (index < daftarSiswaAktif.length - 1) {
           const namaBerikutnya = daftarSiswaAktif[index + 1];
           renderDaftarSiswa(namaBerikutnya);
           const rowBerikutnya = listSiswaContainer.children[index + 1];
-          if (rowBerikutnya) rowBerikutnya.scrollIntoView({ behavior:'smooth', block:'center' });
+          if (rowBerikutnya) rowBerikutnya.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else {
           renderDaftarSiswa(null);
         }
@@ -1043,7 +1217,6 @@ function renderDaftarSiswa(expandedNama) {
     aksiWrap.appendChild(btnSimpanBaris);
     aksiWrap.appendChild(statusSimpanBaris);
     kriteriaWrap.appendChild(aksiWrap);
-
     row.appendChild(kriteriaWrap);
     listSiswaContainer.appendChild(row);
   });
@@ -1052,35 +1225,34 @@ function renderDaftarSiswa(expandedNama) {
 }
 
 function tampilkanInfoProgres(){
-  const jumlahSelesai = daftarSiswaAktif.filter(siswaSudahLengkapDinilai).length;
+  const jumlahSelesai = daftarSiswaAktif.filter(siswaSudahDinilai).length;
   document.getElementById('info-progres-nilai').textContent =
-    `📊 ${jumlahSelesai} dari ${daftarSiswaAktif.length} siswa sudah dinilai lengkap (6/6 kriteria). Anda bisa download CSV kapan saja, walau belum semua selesai dinilai.`;
+    `📊 ${jumlahSelesai} dari ${daftarSiswaAktif.length} siswa sudah dinilai. Anda bisa download CSV kapan saja.`;
 }
 
-// 3. Tombol Navigasi
-document.getElementById('btn-back-kelas').onclick = () => { stepSiswa.style.display = 'none'; stepKelas.style.display = 'block'; };
+document.getElementById('btn-back-kelas').onclick = () => {
+  stepSiswa.style.display = 'none';
+  stepKelas.style.display = 'block';
+};
 
-// 4. Download Nilai Kelas dalam bentuk CSV (mudah dikopi ke Excel)
+// PERUBAHAN: CSV sekarang hanya 4 kolom: No, Nama, Nilai, Keterangan
 document.getElementById('btn-download-csv-nilai').onclick = () => {
-  const tingkatAngka = kelasAktif.match(/\d+/)[0];
-  const nilaiSOP = sopBerdasarkanTingkat[tingkatAngka] || sopBerdasarkanTingkat["7"];
-  let rows = [["No","Nama Siswa","Kelas", ...kriteriaSOPLabel, "Rata-rata"]];
+  let rows = [["No", "Nama Siswa", "Nilai", "Keterangan"]];
 
   daftarSiswaAktif.forEach((nama, index) => {
     const keySiswa = kelasAktif + "_" + nama;
     const data = rekapNilaiSiswa[keySiswa] || {};
-    const nilaiPerKriteria = kriteriaSOPLabel.map((_, i) => data[i] !== undefined ? data[i] : '');
-    const nilaiTerisi = nilaiPerKriteria.filter(v => v !== '');
-    const rataRata = nilaiTerisi.length ? (nilaiTerisi.reduce((a,b)=>a+b,0)/nilaiTerisi.length).toFixed(2) : '';
-    rows.push([index+1, nama, kelasAktif, ...nilaiPerKriteria, rataRata]);
+    const nilai = data.nilai !== undefined ? data.nilai : '';
+    const keterangan = data.keterangan !== undefined ? data.keterangan : '';
+    rows.push([index + 1, nama, nilai, keterangan]);
   });
 
   const csvContent = rows.map(r => r.map(cell => {
     const val = String(cell);
-    return /[",\n]/.test(val) ? '"'+val.replace(/"/g,'""')+'"' : val;
+    return /[",\n]/.test(val) ? '"' + val.replace(/"/g, '""') + '"' : val;
   }).join(',')).join('\r\n');
 
-  const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -1091,8 +1263,7 @@ document.getElementById('btn-download-csv-nilai').onclick = () => {
   URL.revokeObjectURL(url);
 };
 
-
-/* --- JADWAL, PANGKALAN & SETTINGS --- */
+/* --- JADWAL, PANGKALAN & SETTINGS — TIDAK DIUBAH --- */
 let databaseJadwal=[];
 
 function buatBarisJadwal(data){
@@ -1148,9 +1319,7 @@ document.getElementById('input-school-motto').oninput=function(){ document.getEl
 document.getElementById('input-link-siswa').addEventListener('input', function(){ dbSet('link_siswa', this.value); });
 document.getElementById('input-link-guru').addEventListener('input', function(){ dbSet('link_guru', this.value); });
 
-/* =========================================================
-   UPLOAD DAFTAR NAMA SISWA MANUAL (per kelas) UNTUK NILAI PROSES
-   ========================================================= */
+/* --- UPLOAD DAFTAR NAMA SISWA — TIDAK DIUBAH --- */
 const selectKelasSiswa = document.getElementById('select-kelas-siswa');
 const textareaNamaSiswa = document.getElementById('textarea-nama-siswa');
 const statusSimpanSiswa = document.getElementById('status-simpan-siswa');
@@ -1164,7 +1333,6 @@ selectKelasSiswa.addEventListener('change', tampilkanNamaSiswaUntukKelasTerpilih
 
 document.getElementById('btn-simpan-daftar-siswa').onclick = async () => {
   const kelas = selectKelasSiswa.value;
-  // Pecah per baris, buang baris kosong dan spasi berlebih di awal/akhir tiap nama
   const daftarNama = textareaNamaSiswa.value
     .split('\n')
     .map(n => n.trim())
@@ -1185,37 +1353,28 @@ document.getElementById('btn-simpan-daftar-siswa').onclick = async () => {
   setTimeout(()=>statusSimpanSiswa.textContent='', 3000);
 };
 
-/* =========================================================
-   INISIALISASI: muat seluruh data permanen saat aplikasi dibuka
-   ========================================================= */
+/* --- INISIALISASI — TIDAK DIUBAH --- */
 async function muatSeluruhDataPermanen(){
-  // Dokumen
   await muatDatabaseDokumen();
-
-  // Rekap nilai proses
   await muatRekapNilai();
 
-  // Daftar nama siswa per kelas (jika guru pernah upload manual sebelumnya)
   const siswaTersimpan = await dbGet('databaseSiswa');
   if(siswaTersimpan && Object.keys(siswaTersimpan).length){
     databaseSiswa = { ...databaseSiswa, ...siswaTersimpan };
   }
   tampilkanNamaSiswaUntukKelasTerpilih();
 
-  // Jadwal
   const jadwalTersimpan = await dbGet('databaseJadwal');
   if(jadwalTersimpan && jadwalTersimpan.length){
     databaseJadwal = jadwalTersimpan;
     jadwalTersimpan.forEach(j=> buatBarisJadwal(j));
   }
 
-  // Link pangkalan data
   const linkSiswa = await dbGet('link_siswa');
   const linkGuru = await dbGet('link_guru');
   if(linkSiswa) document.getElementById('input-link-siswa').value = linkSiswa;
   if(linkGuru) document.getElementById('input-link-guru').value = linkGuru;
 
-  // Pengaturan (marquee, profil guru, nama & motto sekolah)
   const marquee = await dbGet('pengaturan_marquee');
   if(marquee){
     document.getElementById('input-marquee').value = marquee;
@@ -1249,14 +1408,11 @@ async function muatSeluruhDataPermanen(){
 
 muatSeluruhDataPermanen();
 
-/* --- DAFTARKAN SERVICE WORKER (agar aplikasi bisa dipakai OFFLINE) --- */
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
     navigator.serviceWorker.register('./sw.js').catch(err=>console.error('Gagal mendaftarkan service worker:', err));
   });
 }
-
-/* --- SIAPKAN MANIFEST PWA (agar bisa diinstall ke layar HP) --- */
 document.getElementById('app-manifest-link').setAttribute('href','./manifest.json');
 </script>
 </body>
