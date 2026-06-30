@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Aplikasi Guru - SMP Plus Al Ibanah</title>
+<meta name="theme-color" content="#00020f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Buku Kerja Guru">
+<link rel="manifest" id="app-manifest-link">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;}
+
+/* ===== SPACE BACKGROUND ===== */
+body{
+  background:#00020f;
+  color:#e0f2fe;
+  overflow:hidden;
+  height:100vh;
+  width:100vw;
+}
+
+#space-canvas{
+  position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse at 50% 50%,#040820 0%,#00020f 100%);
+}
+
+/* ===== LANDING / MENU UTAMA ===== */
+#landing{
+  position:fixed;inset:0;z-index:10;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+
+.school-header{
+  text-align:center;margin-bottom:40px;
+}
+.school-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:26px;font-weight:800;color:#00d4ff;
+  letter-spacing:2px;margin-bottom:8px;
+  text-shadow:0 0 20px rgba(0,212,255,0.6);
+}
+.school-motto{
+  font-size:14px;color:#7ecfff;letter-spacing:1px;
+}
+
+.menu-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+  max-width:700px;
+  width:90vw;
+}
+
+.menu-orb{
+  position:relative;
+  background:linear-gradient(135deg,rgba(0,60,140,0.7),rgba(0,20,70,0.9));
+  border:1px solid rgba(0,180,255,0.35);
+  border-radius:18px;
+  padding:28px 16px 24px;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.35s cubic-bezier(.23,1.5,.56,1);
+  backdrop-filter:blur(16px);
+  box-shadow:0 8px 32px rgba(0,80,200,0.2),inset 0 1px 0 rgba(255,255,255,0.07);
+  overflow:hidden;
+}
+
+.menu-orb::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,200,255,0.08),transparent 60%);
+  opacity:0;transition:opacity 0.3s;
+}
+.menu-orb:hover::before{opacity:1;}
+.menu-orb::after{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:2px;
+  background:linear-gradient(90deg,transparent,#00d4ff,transparent);
+  transition:left 0.5s;
+}
+.menu-orb:hover::after{left:100%;}
+
+.menu-orb:hover{
+  transform:translateY(-10px) scale(1.04);
+  border-color:rgba(0,220,255,0.7);
+  box-shadow:0 20px 50px rgba(0,150,255,0.35),0 0 0 1px rgba(0,220,255,0.3),inset 0 0 30px rgba(0,150,255,0.08);
+}
+.menu-orb:active{transform:translateY(-4px) scale(0.98);}
+
+.orb-icon{font-size:32px;margin-bottom:10px;display:block;
+  filter:drop-shadow(0 0 8px rgba(0,200,255,0.6));
+}
+.orb-label{
+  font-size:12.5px;font-weight:700;color:#b0d8f5;letter-spacing:0.5px;
+  text-shadow:0 0 8px rgba(0,150,255,0.5);
+}
+.orb-glow{
+  position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);
+  width:80px;height:40px;
+  background:radial-gradient(ellipse,rgba(0,150,255,0.25),transparent 70%);
+  pointer-events:none;
+}
+
+.landing-marquee-container {
+  position:absolute;top:0;left:0;width:100%;
+  display:flex;align-items:center;gap:14px;
+  overflow:hidden;background:rgba(0,12,40,0.5);
+  border-bottom:1px solid rgba(0,150,255,0.2);padding:12px 16px;
+}
+
+.instansi-badge{
+  flex-shrink:0;
+  font-family:'Orbitron',sans-serif;
+  font-size:11.5px;font-weight:700;color:#00d4ff;
+  letter-spacing:0.5px;white-space:nowrap;
+  background:rgba(0,80,180,0.25);
+  border:1px solid rgba(0,180,255,0.4);
+  padding:6px 14px;border-radius:20px;
+  text-shadow:0 0 10px rgba(0,212,255,0.5);
+  box-shadow:0 0 14px rgba(0,150,255,0.2);
+}
+
+/* ===== APP PANEL ===== */
+#app-panel{
+  position:fixed;inset:0;z-index:20;
+  display:none;
+  flex-direction:column;
+  background:transparent;
+}
+
+.top-header{
+  background:rgba(0,8,30,0.75);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(0,150,255,0.2);
+  padding:0 24px;
+  height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;z-index:5;
+  flex-shrink:0;
+}
+.header-left{display:flex;align-items:center;gap:16px;}
+.btn-home{
+  background:rgba(0,80,180,0.3);
+  border:1px solid rgba(0,180,255,0.3);
+  color:#00d4ff;
+  padding:8px 16px;border-radius:8px;
+  cursor:pointer;font-size:12.5px;font-weight:700;
+  transition:all 0.2s;letter-spacing:0.5px;
+}
+.btn-home:hover{
+  background:rgba(0,120,255,0.3);
+  box-shadow:0 0 16px rgba(0,180,255,0.4);
+  transform:translateY(-2px);
+}
+
+.page-title-header{
+  font-family:'Orbitron',sans-serif;
+  font-size:15px;font-weight:700;
+  color:#00d4ff;letter-spacing:1px;
+  text-shadow:0 0 12px rgba(0,212,255,0.5);
+}
+
+.marquee-wrap{flex:1;overflow:hidden;margin:0 20px;
+  background:rgba(0,50,120,0.15);padding:6px 12px;border-radius:6px;
+  border:1px solid rgba(0,150,255,0.15);}
+@keyframes marqueeRun{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.marquee-text{display:inline-block;font-size:12.5px;font-weight:600;
+  color:#00d4ff;animation:marqueeRun 20s linear infinite;
+  text-shadow:0 0 8px rgba(0,212,255,0.4);
+  white-space: nowrap;}
+
+.user-profile{display:flex;align-items:center;gap:10px;min-width:160px;}
+.avatar{width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,#0057b8,#00d4ff);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:16px;color:white;
+  box-shadow:0 0 14px rgba(0,212,255,0.4);
+  border:1px solid rgba(0,212,255,0.4);}
+.user-info{display:flex;flex-direction:column;}
+.user-name{font-size:12.5px;font-weight:700;color:#e0f2fe;}
+.user-role-text{font-size:11px;color:#5a9abf;}
+
+.content-area{
+  flex:1;overflow-y:auto;padding:28px 32px;
+  position:relative;z-index:2;
+}
+.content-area::-webkit-scrollbar{width:5px;}
+.content-area::-webkit-scrollbar-track{background:transparent;}
+.content-area::-webkit-scrollbar-thumb{background:rgba(0,150,255,0.3);border-radius:3px;}
+
+.page-section{display:none;animation:fadeUp 0.4s ease;}
+.page-section.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.page-title{font-family:'Orbitron',sans-serif;font-size:19px;color:#e0f2fe;
+  margin-bottom:6px;letter-spacing:0.5px;
+  text-shadow:0 0 14px rgba(0,200,255,0.4);}
+.page-desc{font-size:13px;color:#4a7a9b;margin-bottom:24px;}
+
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:15px;}
+.action-card{
+  background:linear-gradient(135deg,rgba(0,40,100,0.8),rgba(0,20,60,0.9));
+  border:1px solid rgba(0,150,255,0.22);
+  border-radius:14px;padding:26px 14px;
+  text-align:center;cursor:pointer;
+  transition:all 0.25s ease;backdrop-filter:blur(12px);
+  box-shadow:0 4px 20px rgba(0,50,150,0.15);
+}
+.action-card:hover{
+  transform:translateY(-5px);border-color:rgba(0,220,255,0.5);
+  box-shadow:0 12px 32px rgba(0,130,255,0.25);
+}
+.action-card h3{font-size:14px;color:#b0d8f5;font-weight:700;}
+.action-card.highlight{
+  background:linear-gradient(135deg,rgba(0,60,140,0.85),rgba(0,30,80,0.9));
+  border-color:rgba(0,200,255,0.35);
+}
+.action-card.highlight h3{color:#00d4ff;}
+
+
+/* =========================================================
+   STYLE KHUSUS FITUR NILAI PROSES
+   ========================================================= */
+
+/* Daftar Siswa */
+.student-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  max-width: 800px;
+}
+.siswa-row {
+  background: linear-gradient(135deg, rgba(0,40,100,0.6), rgba(0,20,60,0.8));
+  border: 1px solid rgba(0,150,255,0.25);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+.siswa-row.aktif {
+  border-color: #00d4ff;
+  box-shadow: 0 4px 20px rgba(0,150,255,0.25);
+}
+.btn-siswa {
+  background: transparent;
+  border: none;
+  color: #e0f2fe;
+  padding: 16px 24px;
+  width: 100%;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.btn-siswa:hover {
+  background: rgba(0,80,180,0.2);
+}
+.btn-siswa.sudah-dinilai::after {
+  content: '✅ Selesai Dinilai';
+  color: #00c97a;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(0,201,122,0.4);
+}
+
+/* 6 Tombol Kriteria SOP - tampil expand di bawah/samping nama siswa */
+.kriteria-inline-wrap{
+  display:none;
+  padding: 16px 20px 20px;
+  border-top: 1px solid rgba(0,150,255,0.2);
+  background: rgba(0,10,35,0.5);
+}
+.siswa-row.expanded .kriteria-inline-wrap{ display:block; }
+.grade-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+  gap: 12px;
+}
+.btn-grade {
+  background: rgba(0,20,55,0.8);
+  border: 1px solid rgba(0,150,255,0.3);
+  border-radius: 12px;
+  padding: 14px 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-align: center;
+  color: #7ecfff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.btn-grade:hover {
+  background: rgba(0,80,180,0.4);
+  border-color: #00d4ff;
+  transform: translateY(-4px);
+  box-shadow: 0 6px 15px rgba(0,150,255,0.2);
+  color: white;
+}
+.btn-grade.selected {
+  background: linear-gradient(135deg, #0057b8, #00d4ff);
+  border-color: white;
+  color: white;
+  box-shadow: 0 0 20px rgba(0,212,255,0.6);
+  transform: translateY(-4px);
+}
+.grade-num {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: 'Orbitron', sans-serif;
+}
+.grade-lbl {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+
+/* ===== DOKUMEN ===== */
+.btn-secondary{
+  background:rgba(0,60,140,0.35);color:#7ecfff;
+  padding:9px 18px;border-radius:8px;font-weight:700;font-size:13px;
+  cursor:pointer;border:1px solid rgba(0,150,255,0.3);transition:all 0.2s;
+}
+.btn-secondary:hover{background:rgba(0,100,220,0.35);color:#00d4ff;border-color:rgba(0,220,255,0.5);}
+.search-box input{
+  width:100%;padding:12px 16px;background:rgba(0,20,55,0.6);border:1px solid rgba(0,150,255,0.25);
+  border-radius:10px;color:#e0f2fe;font-size:14px;outline:none;margin-bottom:16px;
+}
+.document-list-container{background:rgba(0,15,45,0.6);padding:16px;border-radius:14px;border:1px solid rgba(0,150,255,0.15);min-height:180px;}
+.doc-item{background:rgba(0,35,90,0.4);padding:12px 16px;border:1px solid rgba(0,150,255,0.15);border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.doc-item-name{flex:1;cursor:pointer;min-width:140px;word-break:break-word;}
+.doc-item-actions{display:flex;gap:8px;flex-shrink:0;}
+.btn-edit-row{background:rgba(0,150,255,0.2);color:#00d4ff;border:1px solid rgba(0,150,255,0.5);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;}
+.btn-edit-row:hover{background:#00d4ff;color:#00020f;}
+.btn-view-row{background:rgba(0,201,122,0.15);color:#00e08f;border:1px solid rgba(0,201,122,0.5);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;}
+.btn-view-row:hover{background:#00e08f;color:#00020f;}
+.btn-delete-row{background:rgba(255,60,60,0.15);color:#ff6b6b;border:1px solid rgba(255,80,80,0.5);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;}
+.btn-delete-row:hover{background:#ff4d4d;color:#fff;}
+
+/* ===== JADWAL ===== */
+.internal-table{width:100%;border-collapse:collapse;min-width:600px;}
+.internal-table th,.internal-table td{border:1px solid rgba(0,120,200,0.2);padding:10px;text-align:left;font-size:13px;}
+.internal-table th{background:rgba(0,50,120,0.4);color:#7ecfff;}
+.internal-table input,.internal-table select{width:100%;padding:6px;background:rgba(0,15,50,0.7);border:1px solid rgba(0,130,220,0.25);border-radius:5px;color:#c0dff5;outline:none;}
+.upload-area{display:block;border:2px dashed rgba(0,150,255,0.35);border-radius:12px;text-align:center;padding:24px;background:rgba(0,30,80,0.15);color:#3a6a8a;cursor:pointer;}
+.upload-area:hover{border-color:#00d4ff;color:#00d4ff;}
+.jadwal-cards{display:flex;flex-direction:column;gap:12px;margin-top:12px;}
+.jadwal-card{padding:16px;border-radius:12px;background:linear-gradient(135deg,rgba(0,70,180,0.4),rgba(0,25,80,0.6));border:1px solid rgba(0,150,255,0.3);display:flex;flex-direction:column;gap:6px;}
+.jadwal-time{font-size:12px;color:#4a9abf;}
+.jadwal-mapel{font-size:18px;font-weight:700;color:#e0f2fe;}
+.jadwal-kelas{font-size:12px;background:rgba(0,100,200,0.3);padding:3px 10px;border-radius:5px;width:fit-content;color:#7ecfff;}
+
+/* ===== PANGKALAN ===== */
+.spreadsheet-container{width:100%;height:480px;background:rgba(0,10,35,0.6);border:1px solid rgba(0,150,255,0.2);border-radius:14px;overflow:hidden;}
+.spreadsheet-container iframe{width:100%;height:100%;border:none;}
+
+/* ===== SETTINGS ===== */
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+.setting-card{background:rgba(0,12,40,0.7);padding:20px;border-radius:14px;border:1px solid rgba(0,120,200,0.2);}
+.setting-card h3{font-size:14px;color:#00d4ff;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(0,150,255,0.15);}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:12px;margin-bottom:4px;color:#3a7a9f;}
+.form-group input{width:100%;padding:8px 12px;background:rgba(0,20,60,0.6);border:1px solid rgba(0,130,220,0.25);border-radius:6px;color:#c0dff5;font-size:13px;outline:none;}
+
+/* ===== VIEWER FULLSCREEN ===== */
+#doc-viewer{position:fixed;inset:0;z-index:9999;background:rgba(0,5,20,0.96);backdrop-filter:blur(20px);display:none;flex-direction:column;}
+.viewer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:rgba(0,8,30,0.9);border-bottom:1px solid rgba(0,150,255,0.2);}
+.viewer-title{font-family:'Orbitron',sans-serif;color:#00d4ff;font-size:14px;}
+.viewer-body{flex:1;padding:24px;overflow-y:auto;}
+.doc-content-display{background:rgba(0,15,50,0.7);border:1px solid rgba(0,150,255,0.2);border-radius:12px;padding:30px;line-height:1.8;}
+.doc-edit-area{width:100%;min-height:380px;background:rgba(0,10,40,0.8);border:1px solid rgba(0,212,255,0.3);border-radius:12px;padding:20px;color:#c8e0f5;font-size:14px;outline:none;resize:vertical;}
+.btn-primary{background:linear-gradient(135deg,#0057b8,#00aaff);color:white;padding:10px 20px;border-radius:8px;font-weight:700;border:none;cursor:pointer;}
+.btn-primary:hover{background:linear-gradient(135deg,#0066cc,#00ccff);}
+</style>
+</head>
+<body>
+
+<canvas id="space-canvas"></canvas>
+
+<div id="landing">
+  <div class="landing-marquee-container">
+    <div class="marquee-wrap" style="border:none; background:transparent;">
+      <span class="marquee-text" id="display-marquee-landing">✨ SMP PLUS AL IBANAH - Unggul dalam prestasi dan berakhlak Qur'ani ✨ Selamat datang di Aplikasi Buku Kerja Guru! ✨</span>
+    </div>
+    <div class="instansi-badge" id="instansi-badge-landing">SMP Plus Al Ibanah</div>
+  </div>
+
+  <div class="school-header">
+    <div class="school-title" id="landing-school-name">SMP Plus Al Ibanah</div>
+    <div class="school-motto" id="landing-school-motto">Unggul & Qur'ani</div>
+  </div>
+
+  <div class="menu-grid">
+    <div class="menu-orb" data-target="page-dashboard"><span class="orb-icon">🏠</span><div class="orb-label">Dashboard</div><div class="orb-glow"></div></div>
+    <div class="menu-orb" data-target="page-nilai"><span class="orb-icon">📝</span><div class="orb-label">Nilai Proses</div><div class="orb-glow"></div></div>
+    <div class="menu-orb" data-target="page-dokumen"><span class="orb-icon">📤</span><div class="orb-label">Upload Dokumen</div><div class="orb-glow"></div></div>
+    <div class="menu-orb" data-target="page-jadwal"><span class="orb-icon">🗓</span><div class="orb-label">Jadwal Pelajaran</div><div class="orb-glow"></div></div>
+    <div class="menu-orb" data-target="page-pangkalan"><span class="orb-icon">🗄</span><div class="orb-label">Pangkalan Data</div><div class="orb-glow"></div></div>
+    <div class="menu-orb" data-target="page-pengaturan"><span class="orb-icon">⚙</span><div class="orb-label">Pengaturan</div><div class="orb-glow"></div></div>
+  </div>
+</div>
+
+<div id="app-panel">
+  <header class="top-header">
+    <div class="header-left">
+      <button class="btn-home" id="btn-home">← Menu Utama</button>
+      <span class="page-title-header" id="current-page-title">Dashboard</span>
+    </div>
+    <div class="marquee-wrap">
+      <span class="marquee-text" id="display-marquee">✨ SMP PLUS AL IBANAH - Unggul dalam prestasi dan berakhlak Qur'ani ✨ Selamat datang di Aplikasi Buku Kerja Guru! ✨</span>
+    </div>
+    <div class="instansi-badge" id="instansi-badge-header">SMP Plus Al Ibanah</div>
+    <div class="user-profile">
+      <span class="avatar" id="display-avatar">G</span>
+      <div class="user-info">
+        <span class="user-name" id="display-user-name">Nama Guru, S.Pd</span>
+        <span class="user-role-text" id="display-user-role">Guru Mata Pelajaran</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="content-area">
+    
+    <div id="page-dashboard" class="page-section">
+      <div id="dashboard-categories">
+        <h2 class="page-title">Dashboard Pembelajaran</h2>
+        <p class="page-desc">Pilih kategori untuk melihat dokumen yang telah Anda upload.</p>
+        <div class="grid-cards">
+          <div class="action-card cat-btn" data-cat="Modul Ajar"><h3>📚 MODUL AJAR</h3></div>
+          <div class="action-card cat-btn" data-cat="ATP"><h3>🎯 ATP</h3></div>
+          <div class="action-card cat-btn" data-cat="CP"><h3>📖 CP</h3></div>
+          <div class="action-card cat-btn" data-cat="KKTP"><h3>✅ KKTP</h3></div>
+          <div class="action-card cat-btn" data-cat="PROSEM"><h3>📅 PROSEM</h3></div>
+          <div class="action-card cat-btn" data-cat="PROTA"><h3>🗓 PROTA</h3></div>
+        </div>
+      </div>
+      <div id="dashboard-detail" style="display:none;">
+        <button id="btn-back-cat" class="btn-secondary">⬅ Kembali ke Dashboard</button>
+        <h2 class="page-title" id="detail-title" style="margin-top:18px;">Kategori Dokumen</h2>
+        <div class="search-box"><input type="text" id="search-cat-dokumen" placeholder="Cari dokumen, kelas, atau bab..."></div>
+        <div class="document-list-container"><div id="detail-doc-list"></div></div>
+      </div>
+    </div>
+
+    <div id="page-nilai" class="page-section">
+      <div id="nilai-step-kelas">
+        <h2 class="page-title">Pengisian Nilai Proses (Sesuai SOP)</h2>
+        <p class="page-desc">Silakan pilih kelas yang akan diinput nilainya.</p>
+        <div class="grid-cards">
+          <div class="action-card kelas-btn" data-kelas="7A"><h3>Kelas 7A</h3></div>
+          <div class="action-card kelas-btn" data-kelas="7B"><h3>Kelas 7B</h3></div>
+          <div class="action-card kelas-btn" data-kelas="8A"><h3>Kelas 8A</h3></div>
+          <div class="action-card kelas-btn" data-kelas="8B"><h3>Kelas 8B</h3></div>
+          <div class="action-card kelas-btn" data-kelas="9A"><h3>Kelas 9A</h3></div>
+          <div class="action-card kelas-btn" data-kelas="9B"><h3>Kelas 9B</h3></div>
+          <div class="action-card kelas-btn" data-kelas="10A"><h3>Kelas 10A</h3></div>
+          <div class="action-card kelas-btn" data-kelas="10B"><h3>Kelas 10B</h3></div>
+          <div class="action-card kelas-btn" data-kelas="11A"><h3>Kelas 11A</h3></div>
+          <div class="action-card kelas-btn" data-kelas="11B"><h3>Kelas 11B</h3></div>
+          <div class="action-card kelas-btn" data-kelas="12A"><h3>Kelas 12A</h3></div>
+          <div class="action-card kelas-btn" data-kelas="12B"><h3>Kelas 12B</h3></div>
+        </div>
+      </div>
+
+      <div id="nilai-step-siswa" style="display:none;">
+        <button class="btn-secondary" id="btn-back-kelas">⬅ Kembali ke Daftar Kelas</button>
+        <h2 class="page-title" id="title-kelas-terpilih" style="margin-top:18px;">Daftar Siswa</h2>
+        <p class="page-desc">Klik nama siswa untuk menampilkan 6 tombol nilai proses di sampingnya. Setelah nilai dipilih, otomatis lanjut ke siswa berikutnya.</p>
+        <div id="list-siswa-container" class="student-list-container"></div>
+        <div id="nilai-selesai-area" style="margin-top:20px; display:none;">
+          <button class="btn-primary" id="btn-download-csv-nilai">⬇️ Download Nilai Kelas (CSV)</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-dokumen" class="page-section">
+      <h2 class="page-title">Pusat Upload Dokumen & Data</h2>
+      <div class="settings-grid">
+        <div class="setting-card" style="grid-column:1/-1;">
+          <h3 style="color:#00d4ff;margin-bottom:15px;border-bottom:1px solid rgba(0,150,255,0.18);padding-bottom:10px;">📅 Buat Jadwal Pelajaran</h3>
+          <div style="overflow-x:auto;">
+            <table class="internal-table">
+              <thead><tr><th>Hari</th><th>Waktu (Jam)</th><th>Mata Pelajaran</th><th>Kelas</th><th style="width:50px;">Aksi</th></tr></thead>
+              <tbody id="tbody-jadwal"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:12px;">
+            <button id="btn-add-jadwal" class="btn-secondary">+ Tambah Baris</button>
+            <button id="btn-save-jadwal" class="btn-primary" style="padding:9px 18px;font-size:13px;">💾 Simpan Jadwal</button>
+          </div>
+          <div id="status-jadwal" style="margin-top:10px;color:#00d4ff;font-size:13px;font-weight:bold;"></div>
+        </div>
+        <div class="setting-card">
+          <h3 style="color:#00d4ff;margin-bottom:15px;border-bottom:1px solid rgba(0,150,255,0.18);padding-bottom:10px;">📄 Upload File Pembelajaran</h3>
+          <div class="form-group">
+            <label>Pilih Kategori Dokumen</label>
+            <select id="upload-category" style="width:100%;padding:10px;border-radius:8px;background:#040c22;color:#e0f2fe;border:1px solid rgba(0,130,220,0.25);margin-bottom:14px;">
+              <option value="Modul Ajar">📚 Modul Ajar</option>
+              <option value="ATP">🎯 ATP</option>
+              <option value="CP">📖 CP</option>
+              <option value="KKTP">✅ KKTP</option>
+              <option value="PROSEM">📅 PROSEM</option>
+              <option value="PROTA">🗓 PROTA</option>
+            </select>
+          </div>
+          <label for="file-upload" class="upload-area"><input type="file" id="file-upload" style="display:none;" multiple><p>📥 Klik untuk Pilih File Anda</p></label>
+          <div id="upload-status" style="margin-top:14px;color:#00d4ff;font-weight:bold;font-size:13px;"></div>
+        </div>
+        <div class="setting-card">
+          <h3 style="color:#00d4ff;margin-bottom:15px;border-bottom:1px solid rgba(0,150,255,0.18);padding-bottom:10px;">🔗 Tautkan Pangkalan Data (G-Sheets)</h3>
+          <div class="form-group"><label>Link Google Sheets Data Siswa</label><input type="text" id="input-link-siswa" placeholder="Paste link di sini..."></div>
+          <div class="form-group"><label>Link Google Sheets Data Guru</label><input type="text" id="input-link-guru" placeholder="Paste link di sini..."></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-jadwal" class="page-section">
+      <h2 class="page-title">Jadwal Mengajar Hari Ini</h2>
+      <p class="page-desc" id="hari-ini-text">Mendeteksi hari aktif...</p>
+      <div class="jadwal-cards" id="jadwal-container"></div>
+    </div>
+
+    <div id="page-pangkalan" class="page-section">
+      <div id="pangkalan-menu">
+        <h2 class="page-title">Pangkalan Data Institusi</h2>
+        <div class="grid-cards">
+          <div class="action-card highlight pangkalan-btn" data-type="siswa"><h3>👥 Pangkalan Data Siswa</h3></div>
+          <div class="action-card highlight pangkalan-btn" data-type="guru"><h3>👨‍🏫 Pangkalan Data Guru</h3></div>
+        </div>
+      </div>
+      <div id="pangkalan-viewer" style="display:none;">
+        <button id="btn-back-pangkalan" class="btn-secondary">⬅ Kembali</button>
+        <h2 class="page-title" id="pangkalan-title" style="margin-top:18px;margin-bottom:20px;">Memuat Database...</h2>
+        <div class="spreadsheet-container" id="spreadsheet-view"></div>
+      </div>
+    </div>
+
+    <div id="page-pengaturan" class="page-section">
+      <h2 class="page-title">Pengaturan Aplikasi</h2>
+      <div class="settings-grid">
+        <div class="setting-card">
+          <h3>A. Edit Running Text</h3>
+          <div class="form-group"><input type="text" id="input-marquee" value="✨ SMP PLUS AL IBANAH - Unggul dalam prestasi dan berakhlak Qur'ani ✨ Selamat datang di Aplikasi Buku Kerja Guru! ✨"></div>
+        </div>
+        <div class="setting-card">
+          <h3>B. Edit Profil Pengguna</h3>
+          <div class="form-group"><label>Nama Lengkap</label><input type="text" id="input-user-name" value="Nama Guru, S.Pd"></div>
+          <div class="form-group"><label>Keterangan</label><input type="text" id="input-user-role" value="Guru Mata Pelajaran"></div>
+        </div>
+        <div class="setting-card">
+          <h3>C. Edit Instansi</h3>
+          <div class="form-group"><label>Nama Sekolah</label><input type="text" id="input-school-name" value="SMP Plus Al Ibanah"></div>
+          <div class="form-group"><label>Motto Sekolah</label><input type="text" id="input-school-motto" value="Unggul & Qur'ani"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="doc-viewer">
+  <div class="viewer-header">
+    <span class="viewer-title" id="viewer-doc-title">📄 Nama Dokumen</span>
+    <div class="viewer-actions">
+      <button class="btn-edit" id="btn-toggle-edit">✏️ Edit Dokumen</button>
+      <button class="btn-secondary" id="btn-close-viewer">✕ Tutup</button>
+    </div>
+  </div>
+  <div class="viewer-body">
+    <div class="doc-content-display" id="doc-view-mode">
+      <h2 id="doc-view-title"></h2>
+      <div id="doc-view-content"></div>
+    </div>
+    <textarea class="doc-edit-area" id="doc-edit-area" style="display:none;"></textarea>
+    <div id="edit-actions" style="display:none;margin-top:14px;gap:10px;">
+      <button class="btn-primary" id="btn-save-doc">💾 Simpan Perubahan</button>
+      <button class="btn-secondary" id="btn-cancel-edit">Batal</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   LAPISAN PENYIMPANAN PERMANEN (IndexedDB)
+   Semua data (dokumen, jadwal, nilai, pengaturan, link)
+   disimpan permanen di perangkat, tidak hilang saat aplikasi
+   ditutup/dibuka kembali, dan tetap bisa diakses offline.
+   ========================================================= */
+const DB_NAME = 'BukuKerjaGuruDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'appData';
+let dbInstance = null;
+
+function openAppDB(){
+  return new Promise((resolve, reject)=>{
+    if(dbInstance){ resolve(dbInstance); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e)=>{
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(STORE_NAME)){
+        db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = (e)=>{ dbInstance = e.target.result; resolve(dbInstance); };
+    req.onerror = (e)=>{ console.error('Gagal membuka database lokal', e); reject(e); };
+  });
+}
+
+function dbSet(key, value){
+  return openAppDB().then(db=> new Promise((resolve, reject)=>{
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put({ key, value });
+    tx.oncomplete = ()=> resolve(true);
+    tx.onerror = (e)=> reject(e);
+  })).catch(err=>{ console.error('Gagal menyimpan data', key, err); return false; });
+}
+
+function dbGet(key){
+  return openAppDB().then(db=> new Promise((resolve, reject)=>{
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const req = tx.objectStore(STORE_NAME).get(key);
+    req.onsuccess = ()=> resolve(req.result ? req.result.value : undefined);
+    req.onerror = (e)=> reject(e);
+  })).catch(err=>{ console.error('Gagal membaca data', key, err); return undefined; });
+}
+
+// Helper khusus dokumen: tiap dokumen disimpan dengan key sendiri agar efisien
+function dbSetDoc(id, doc){ return dbSet('doc_'+id, doc); }
+function dbDeleteDoc(id){
+  return openAppDB().then(db=> new Promise((resolve, reject)=>{
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).delete('doc_'+id);
+    tx.oncomplete = ()=> resolve(true);
+    tx.onerror = (e)=> reject(e);
+  })).catch(err=>{ console.error('Gagal menghapus dokumen', id, err); return false; });
+}
+function dbGetAllDocs(){
+  return openAppDB().then(db=> new Promise((resolve, reject)=>{
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const req = tx.objectStore(STORE_NAME).getAll();
+    req.onsuccess = ()=>{
+      const rows = (req.result||[]).filter(r=>r.key && r.key.indexOf('doc_')===0);
+      resolve(rows.map(r=>r.value));
+    };
+    req.onerror = (e)=> reject(e);
+  })).catch(err=>{ console.error('Gagal memuat seluruh dokumen', err); return []; });
+}
+
+/* --- SPACE CANVAS --- */
+(function(){
+  const canvas = document.getElementById('space-canvas');
+  const ctx = canvas.getContext('2d');
+  let W=canvas.width=window.innerWidth, H=canvas.height=window.innerHeight;
+  let stars=[], planets=[];
+  window.addEventListener('resize', ()=>{ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; });
+  for(let i=0;i<180;i++) stars.push({x:Math.random()*2000, y:Math.random()*1200, r:Math.random()*1.2, a:Math.random(), da:Math.random()*0.005+0.001});
+  const defs=[{cx:0.5,cy:0.5,or:0.35,ang:0,sp:0.0006,r:40,col:'#1a3a8a',ring:true},{cx:0.5,cy:0.5,or:0.6,ang:2,sp:0.0004,r:26,col:'#6b1a6b'},{cx:0.5,cy:0.5,or:0.8,ang:4,sp:0.0003,r:30,col:'#0d4a3a'}];
+  defs.forEach(d=>planets.push({...d}));
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H));
+    bg.addColorStop(0,'#05102a'); bg.addColorStop(1,'#00020f');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    stars.forEach(s=>{
+      s.a+=s.da; if(s.a>1||s.a<0) s.da*=-1; ctx.globalAlpha=s.a;
+      ctx.beginPath(); ctx.arc(s.x%W,s.y%H,s.r,0,Math.PI*2); ctx.fillStyle='#e0f2fe'; ctx.fill();
+    });
+    ctx.globalAlpha=1;
+
+    planets.forEach(p=>{
+      p.ang+=p.sp;
+      let mx=Math.max(W,H);
+      let cx=p.cx*W+Math.cos(p.ang)*p.or*mx;
+      let cy=p.cy*H+Math.sin(p.ang)*p.or*mx*0.5;
+      
+      let grd=ctx.createRadialGradient(cx,cy,p.r*0.2,cx,cy,p.r*2);
+      grd.addColorStop(0,p.col+'66'); grd.addColorStop(1,'transparent');
+      ctx.beginPath(); ctx.arc(cx,cy,p.r*2,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
+
+      ctx.beginPath(); ctx.arc(cx,cy,p.r,0,Math.PI*2); ctx.fillStyle=p.col; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* --- NAVIGASI UTAMA --- */
+const landing=document.getElementById('landing'), appPanel=document.getElementById('app-panel'), btnHome=document.getElementById('btn-home'), currentTitle=document.getElementById('current-page-title');
+const pageNames={'page-dashboard':'Dashboard','page-nilai':'Nilai Proses','page-dokumen':'Upload Dokumen','page-jadwal':'Jadwal Pelajaran','page-pangkalan':'Pangkalan Data','page-pengaturan':'Pengaturan'};
+
+document.querySelectorAll('.menu-orb').forEach(orb=>{
+  orb.addEventListener('click', function(){
+    let t=this.dataset.target; landing.style.display='none'; appPanel.style.display='flex';
+    document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active'));
+    document.getElementById(t).classList.add('active'); currentTitle.textContent=pageNames[t];
+    if(t==='page-jadwal') renderJadwalHariIni();
+  });
+});
+btnHome.addEventListener('click', ()=>{ appPanel.style.display='none'; landing.style.display='flex'; });
+
+/* --- DASHBOARD & UPLOAD --- */
+let databaseDokumen=[]; let activeCategory='';
+const dbCat=document.getElementById('dashboard-categories'), dbDet=document.getElementById('dashboard-detail'), detList=document.getElementById('detail-doc-list');
+
+function generateDocId(){ return 'd_'+Date.now()+'_'+Math.random().toString(36).slice(2,9); }
+
+// Muat seluruh dokumen tersimpan dari IndexedDB saat aplikasi dibuka
+async function muatDatabaseDokumen(){
+  databaseDokumen = await dbGetAllDocs();
+}
+
+document.querySelectorAll('.cat-btn').forEach(btn=>{
+  btn.addEventListener('click', function(){
+    activeCategory=this.dataset.cat; document.getElementById('detail-title').innerHTML=`📄 Kategori: <strong>${activeCategory}</strong>`;
+    dbCat.style.display='none'; dbDet.style.display='block'; renderDokumen();
+  });
+});
+document.getElementById('btn-back-cat').addEventListener('click', ()=>{ dbDet.style.display='none'; dbCat.style.display='block'; });
+
+function renderDokumen(txt=''){
+  detList.innerHTML='';
+  let filtered=databaseDokumen.filter(d=>d.kategori===activeCategory&&d.nama.toLowerCase().includes(txt.toLowerCase()));
+  if(!filtered.length) { detList.innerHTML='<div class="empty-msg">Belum ada file. Silakan upload file di menu Dokumen.</div>'; return; }
+  filtered.forEach(doc=>{
+    let div=document.createElement('div'); div.className='doc-item';
+    div.innerHTML=`
+      <div class="doc-item-name">📄 ${doc.nama}</div>
+      <div class="doc-item-actions">
+        <button class="btn-view-row">👁 Lihat</button>
+        <button class="btn-edit-row">✏️ Edit</button>
+        <button class="btn-delete-row">🗑 Hapus</button>
+      </div>`;
+    div.querySelector('.doc-item-name').onclick=()=>openDocViewer(doc,false);
+    div.querySelector('.btn-view-row').onclick=()=>openDocViewer(doc,false);
+    div.querySelector('.btn-edit-row').onclick=()=>openDocViewer(doc,true);
+    div.querySelector('.btn-delete-row').onclick=()=>hapusDokumen(doc);
+    detList.appendChild(div);
+  });
+}
+document.getElementById('search-cat-dokumen').addEventListener('input', function(){ renderDokumen(this.value); });
+
+async function hapusDokumen(doc){
+  if(!confirm(`Yakin ingin menghapus dokumen "${doc.nama}"? Data yang dihapus tidak bisa dikembalikan.`)) return;
+  await dbDeleteDoc(doc.id);
+  databaseDokumen = databaseDokumen.filter(d=>d.id!==doc.id);
+  renderDokumen(document.getElementById('search-cat-dokumen').value);
+}
+
+document.getElementById('file-upload').addEventListener('change', async function(){
+  let cat=document.getElementById('upload-category').value;
+  if(this.files.length){
+    let count=0;
+    for(let i=0;i<this.files.length;i++){
+      const f=this.files[i];
+      const doc={ id:generateDocId(), nama:f.name, kategori:cat, isi:'Konten file '+f.name+' siap diedit.' };
+      databaseDokumen.push(doc);
+      await dbSetDoc(doc.id, doc);
+      count++;
+    }
+    document.getElementById('upload-status').textContent=`✅ ${count} file masuk ke ${cat} dan tersimpan permanen!`;
+    setTimeout(()=>document.getElementById('upload-status').textContent='',3000);
+    this.value='';
+  }
+});
+
+/* --- VIEWER & EDIT --- */
+const dViewer=document.getElementById('doc-viewer'), vArea=document.getElementById('doc-edit-area'), vMode=document.getElementById('doc-view-mode'), eActions=document.getElementById('edit-actions'), tEdit=document.getElementById('btn-toggle-edit');
+let activeDocId=null, isEdit=false;
+
+function getDocById(id){ return databaseDokumen.find(d=>d.id===id); }
+
+function openDocViewer(doc,startEdit){
+  activeDocId=doc.id; isEdit=startEdit;
+  document.getElementById('viewer-doc-title').textContent=doc.nama; document.getElementById('doc-view-title').textContent=doc.nama;
+  if(isEdit){ vArea.value=doc.isi; vMode.style.display='none'; vArea.style.display='block'; eActions.style.display='flex'; tEdit.textContent='👁 Lihat'; }
+  else { document.getElementById('doc-view-content').textContent=doc.isi; vMode.style.display='block'; vArea.style.display='none'; eActions.style.display='none'; tEdit.textContent='✏️ Edit'; }
+  dViewer.style.display='flex';
+}
+tEdit.onclick=()=>{ openDocViewer(getDocById(activeDocId),!isEdit); };
+document.getElementById('btn-close-viewer').onclick=()=>{ dViewer.style.display='none'; renderDokumen(document.getElementById('search-cat-dokumen').value); };
+document.getElementById('btn-cancel-edit').onclick=()=>{ openDocViewer(getDocById(activeDocId),false); };
+document.getElementById('btn-save-doc').onclick=async ()=>{
+  const doc=getDocById(activeDocId);
+  doc.isi=vArea.value;
+  await dbSetDoc(doc.id, doc);
+  openDocViewer(doc,false);
+};
+
+/* =========================================================
+   LOGIKA BARU: NILAI PROSES (SESUAI SOP 12 KELAS) 
+   ========================================================= */
+
+// Data Dummy Siswa
+const databaseSiswa = {
+  "7A": ["Ahmad Maulana", "Budi Santoso", "Citra Kirana", "Dedi Hermawan", "Eka Putri"],
+  "7B": ["Fajar Nugraha", "Gita Savitri", "Hadi Pratama"],
+  "8A": ["Indah Permata", "Joko Susilo", "Kurniawan"],
+  "12A": ["Reza Rahadian", "Syifa Hadju", "Vanesha Prescilla"] // Contoh tambahan
+};
+
+// Data Tabel SOP yang Anda berikan -- TIDAK DIUBAH, sesuai SOP resmi
+const kriteriaSOPLabel = ["Kehadiran", "Bersikap Baik", "Siap", "Termotivasi", "Interaktif", "Membantu"];
+const sopBerdasarkanTingkat = {
+  "7": [75, 77, 79, 81, 83, 85],
+  "8": [75, 78, 81, 84, 87, 90],
+  "9": [75, 80, 85, 90, 95, 98],
+  "10": [70, 73, 76, 79, 82, 85],
+  "11": [70, 74, 78, 82, 86, 90],
+  "12": [70, 76, 82, 88, 94, 98]
+};
+
+// Variabel pelacakan
+let kelasAktif = "";
+let daftarSiswaAktif = [];
+let rekapNilaiSiswa = {}; // Format: { "7A_Ahmad Maulana": { 0: 75, 2: 79 } } (kriteria index -> nilai SOP)
+
+// Muat rekap nilai tersimpan dari penyimpanan permanen
+async function muatRekapNilai(){
+  const saved = await dbGet('rekapNilaiSiswa');
+  rekapNilaiSiswa = saved || {};
+}
+function simpanRekapNilai(){ return dbSet('rekapNilaiSiswa', rekapNilaiSiswa); }
+
+// Elemen DOM Nilai
+const stepKelas = document.getElementById('nilai-step-kelas');
+const stepSiswa = document.getElementById('nilai-step-siswa');
+const listSiswaContainer = document.getElementById('list-siswa-container');
+const nilaiSelesaiArea = document.getElementById('nilai-selesai-area');
+
+// 1. Saat Kelas Diklik
+document.querySelectorAll('.kelas-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    kelasAktif = this.dataset.kelas;
+    daftarSiswaAktif = databaseSiswa[kelasAktif] || ["Siswa Contoh 1", "Siswa Contoh 2", "Siswa Contoh 3"];
+
+    document.getElementById('title-kelas-terpilih').textContent = `Daftar Siswa Kelas ${kelasAktif}`;
+    stepKelas.style.display = 'none';
+    stepSiswa.style.display = 'block';
+
+    renderDaftarSiswa();
+  });
+});
+
+function siswaSudahLengkapDinilai(nama){
+  const keySiswa = kelasAktif + "_" + nama;
+  const data = rekapNilaiSiswa[keySiswa];
+  return !!data && Object.keys(data).length === kriteriaSOPLabel.length;
+}
+
+function semuaSiswaSudahDinilai(){
+  return daftarSiswaAktif.length>0 && daftarSiswaAktif.every(siswaSudahLengkapDinilai);
+}
+
+// 2. Tampilkan Daftar Siswa, masing-masing baris bisa expand 6 tombol nilai
+function renderDaftarSiswa(expandedNama) {
+  listSiswaContainer.innerHTML = '';
+  const tingkatAngka = kelasAktif.match(/\d+/)[0];
+  const nilaiSOP = sopBerdasarkanTingkat[tingkatAngka] || sopBerdasarkanTingkat["7"];
+
+  daftarSiswaAktif.forEach((nama, index) => {
+    const keySiswa = kelasAktif + "_" + nama;
+    if (!rekapNilaiSiswa[keySiswa]) rekapNilaiSiswa[keySiswa] = {};
+
+    const row = document.createElement('div');
+    row.className = 'siswa-row';
+    if (nama === expandedNama) row.classList.add('expanded','aktif');
+
+    const btnSiswa = document.createElement('button');
+    btnSiswa.className = 'btn-siswa';
+    if (siswaSudahLengkapDinilai(nama)) btnSiswa.classList.add('sudah-dinilai');
+    btnSiswa.textContent = `${index + 1}. ${nama}`;
+    btnSiswa.onclick = () => {
+      // Jika row yang sama diklik lagi, tutup. Jika row lain, buka itu (tutup yang lain).
+      const sedangTerbuka = row.classList.contains('expanded');
+      renderDaftarSiswa(sedangTerbuka ? null : nama);
+    };
+
+    row.appendChild(btnSiswa);
+
+    // 6 Tombol kriteria SOP, expand inline di bawah nama siswa yang diklik
+    const kriteriaWrap = document.createElement('div');
+    kriteriaWrap.className = 'kriteria-inline-wrap';
+    const grid = document.createElement('div');
+    grid.className = 'grade-options';
+
+    kriteriaSOPLabel.forEach((namaKriteria, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-grade';
+      if (rekapNilaiSiswa[keySiswa][i]) btn.classList.add('selected');
+      btn.innerHTML = `<span class="grade-num">${nilaiSOP[i]}</span><span class="grade-lbl">${namaKriteria}</span>`;
+      btn.onclick = async () => {
+        btn.classList.toggle('selected');
+        if (btn.classList.contains('selected')) {
+          rekapNilaiSiswa[keySiswa][i] = nilaiSOP[i];
+        } else {
+          delete rekapNilaiSiswa[keySiswa][i];
+        }
+        await simpanRekapNilai();
+        btnSiswa.classList.toggle('sudah-dinilai', siswaSudahLengkapDinilai(nama));
+
+        // Jika seluruh 6 kriteria sudah dipilih, otomatis lanjut ke siswa berikutnya
+        if (siswaSudahLengkapDinilai(nama)) {
+          if (index < daftarSiswaAktif.length - 1) {
+            const namaBerikutnya = daftarSiswaAktif[index + 1];
+            renderDaftarSiswa(namaBerikutnya);
+            const rowBerikutnya = listSiswaContainer.children[index + 1];
+            if (rowBerikutnya) rowBerikutnya.scrollIntoView({ behavior:'smooth', block:'center' });
+          } else {
+            renderDaftarSiswa(null);
+          }
+        }
+      };
+      grid.appendChild(btn);
+    });
+
+    kriteriaWrap.appendChild(grid);
+    row.appendChild(kriteriaWrap);
+    listSiswaContainer.appendChild(row);
+  });
+
+  // Tampilkan tombol download CSV jika seluruh siswa di kelas ini sudah dinilai lengkap
+  nilaiSelesaiArea.style.display = semuaSiswaSudahDinilai() ? 'block' : 'none';
+}
+
+// 3. Tombol Navigasi
+document.getElementById('btn-back-kelas').onclick = () => { stepSiswa.style.display = 'none'; stepKelas.style.display = 'block'; };
+
+// 4. Download Nilai Kelas dalam bentuk CSV (mudah dikopi ke Excel)
+document.getElementById('btn-download-csv-nilai').onclick = () => {
+  const tingkatAngka = kelasAktif.match(/\d+/)[0];
+  const nilaiSOP = sopBerdasarkanTingkat[tingkatAngka] || sopBerdasarkanTingkat["7"];
+  let rows = [["No","Nama Siswa","Kelas", ...kriteriaSOPLabel, "Rata-rata"]];
+
+  daftarSiswaAktif.forEach((nama, index) => {
+    const keySiswa = kelasAktif + "_" + nama;
+    const data = rekapNilaiSiswa[keySiswa] || {};
+    const nilaiPerKriteria = kriteriaSOPLabel.map((_, i) => data[i] !== undefined ? data[i] : '');
+    const nilaiTerisi = nilaiPerKriteria.filter(v => v !== '');
+    const rataRata = nilaiTerisi.length ? (nilaiTerisi.reduce((a,b)=>a+b,0)/nilaiTerisi.length).toFixed(2) : '';
+    rows.push([index+1, nama, kelasAktif, ...nilaiPerKriteria, rataRata]);
+  });
+
+  const csvContent = rows.map(r => r.map(cell => {
+    const val = String(cell);
+    return /[",\n]/.test(val) ? '"'+val.replace(/"/g,'""')+'"' : val;
+  }).join(',')).join('\r\n');
+
+  const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Nilai_Proses_Kelas_${kelasAktif}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+
+/* --- JADWAL, PANGKALAN & SETTINGS --- */
+let databaseJadwal=[];
+
+function buatBarisJadwal(data){
+  let tr=document.createElement('tr');
+  const hariOpt = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  tr.innerHTML=`<td><select>${hariOpt.map(h=>`<option ${data&&data.hari===h?'selected':''}>${h}</option>`).join('')}</select></td><td><input placeholder="Jam" value="${data?data.waktu:''}"></td><td><input placeholder="Mapel" value="${data?data.mapel:''}"></td><td><input placeholder="Kelas" value="${data?data.kelas:''}"></td><td><button class="btn-danger" style="padding:4px 8px;">X</button></td>`;
+  document.getElementById('tbody-jadwal').appendChild(tr);
+  tr.querySelector('.btn-danger').onclick=()=>tr.remove();
+  return tr;
+}
+
+document.getElementById('btn-add-jadwal').onclick=()=>{ buatBarisJadwal(); };
+
+document.getElementById('btn-save-jadwal').onclick=async ()=>{
+  databaseJadwal=[];
+  document.getElementById('tbody-jadwal').querySelectorAll('tr').forEach(r=>{
+    let inputs=r.querySelectorAll('input'), s=r.querySelector('select');
+    if(inputs[1].value) databaseJadwal.push({hari:s.value, waktu:inputs[0].value, mapel:inputs[1].value, kelas:inputs[2].value});
+  });
+  await dbSet('databaseJadwal', databaseJadwal);
+  document.getElementById('status-jadwal').textContent='✅ Jadwal disimpan permanen!'; setTimeout(()=>document.getElementById('status-jadwal').textContent='',2000);
+};
+
+function renderJadwalHariIni(){
+  let hari=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][new Date().getDay()];
+  document.getElementById('hari-ini-text').innerHTML=`Hari aktif: <strong>${hari}</strong>`;
+  const cont=document.getElementById('jadwal-container'); cont.innerHTML='';
+  let filtered=databaseJadwal.filter(j=>j.hari===hari);
+  if(!filtered.length){ cont.innerHTML='<div class="empty-msg">Tidak ada jadwal hari ini.</div>'; return; }
+  filtered.forEach(j=>{
+    let d=document.createElement('div'); d.className='jadwal-card';
+    d.innerHTML=`<div class="jadwal-time">${j.waktu}</div><div class="jadwal-mapel">${j.mapel}</div><div class="jadwal-kelas">KELAS: ${j.kelas}</div>`;
+    cont.appendChild(d);
+  });
+}
+
+document.querySelectorAll('.pangkalan-btn').forEach(btn=>{
+  btn.onclick=function(){
+    let t=this.dataset.type, url=t==='siswa'?document.getElementById('input-link-siswa').value:document.getElementById('input-link-guru').value;
+    document.getElementById('pangkalan-title').textContent=t==='siswa'?'👥 Data Siswa':'👨‍🏫 Data Guru';
+    document.getElementById('pangkalan-menu').style.display='none'; document.getElementById('pangkalan-viewer').style.display='block';
+    if(url) { if(url.includes('/edit')) url=url.split('/edit')[0]+'/htmlembed?widget=true'; document.getElementById('spreadsheet-view').innerHTML=`<iframe src="${url}"></iframe>`; }
+    else document.getElementById('spreadsheet-view').innerHTML='<p style="text-align:center; padding-top:40px; color:#3a7a9f;">Belum ditautkan di menu Dokumen.</p>';
+  };
+});
+document.getElementById('btn-back-pangkalan').onclick=()=>{ document.getElementById('pangkalan-viewer').style.display='none'; document.getElementById('pangkalan-menu').style.display='block'; };
+
+document.getElementById('input-marquee').oninput=function(){ document.getElementById('display-marquee').textContent=this.value; document.getElementById('display-marquee-landing').textContent=this.value; dbSet('pengaturan_marquee', this.value); };
+document.getElementById('input-user-name').oninput=function(){ document.getElementById('display-user-name').textContent=this.value; document.getElementById('display-avatar').textContent=this.value.charAt(0).toUpperCase(); dbSet('pengaturan_userName', this.value); };
+document.getElementById('input-user-role').oninput=function(){ document.getElementById('display-user-role').textContent=this.value; dbSet('pengaturan_userRole', this.value); };
+document.getElementById('input-school-name').oninput=function(){ document.getElementById('landing-school-name').textContent=this.value; document.getElementById('instansi-badge-landing').textContent=this.value; document.getElementById('instansi-badge-header').textContent=this.value; dbSet('pengaturan_schoolName', this.value); };
+document.getElementById('input-school-motto').oninput=function(){ document.getElementById('landing-school-motto').textContent=this.value; dbSet('pengaturan_schoolMotto', this.value); };
+document.getElementById('input-link-siswa').addEventListener('input', function(){ dbSet('link_siswa', this.value); });
+document.getElementById('input-link-guru').addEventListener('input', function(){ dbSet('link_guru', this.value); });
+
+/* =========================================================
+   INISIALISASI: muat seluruh data permanen saat aplikasi dibuka
+   ========================================================= */
+async function muatSeluruhDataPermanen(){
+  // Dokumen
+  await muatDatabaseDokumen();
+
+  // Rekap nilai proses
+  await muatRekapNilai();
+
+  // Jadwal
+  const jadwalTersimpan = await dbGet('databaseJadwal');
+  if(jadwalTersimpan && jadwalTersimpan.length){
+    databaseJadwal = jadwalTersimpan;
+    jadwalTersimpan.forEach(j=> buatBarisJadwal(j));
+  }
+
+  // Link pangkalan data
+  const linkSiswa = await dbGet('link_siswa');
+  const linkGuru = await dbGet('link_guru');
+  if(linkSiswa) document.getElementById('input-link-siswa').value = linkSiswa;
+  if(linkGuru) document.getElementById('input-link-guru').value = linkGuru;
+
+  // Pengaturan (marquee, profil guru, nama & motto sekolah)
+  const marquee = await dbGet('pengaturan_marquee');
+  if(marquee){
+    document.getElementById('input-marquee').value = marquee;
+    document.getElementById('display-marquee').textContent = marquee;
+    document.getElementById('display-marquee-landing').textContent = marquee;
+  }
+  const userName = await dbGet('pengaturan_userName');
+  if(userName){
+    document.getElementById('input-user-name').value = userName;
+    document.getElementById('display-user-name').textContent = userName;
+    document.getElementById('display-avatar').textContent = userName.charAt(0).toUpperCase();
+  }
+  const userRole = await dbGet('pengaturan_userRole');
+  if(userRole){
+    document.getElementById('input-user-role').value = userRole;
+    document.getElementById('display-user-role').textContent = userRole;
+  }
+  const schoolName = await dbGet('pengaturan_schoolName');
+  if(schoolName){
+    document.getElementById('input-school-name').value = schoolName;
+    document.getElementById('landing-school-name').textContent = schoolName;
+    document.getElementById('instansi-badge-landing').textContent = schoolName;
+    document.getElementById('instansi-badge-header').textContent = schoolName;
+  }
+  const schoolMotto = await dbGet('pengaturan_schoolMotto');
+  if(schoolMotto){
+    document.getElementById('input-school-motto').value = schoolMotto;
+    document.getElementById('landing-school-motto').textContent = schoolMotto;
+  }
+}
+
+muatSeluruhDataPermanen();
+
+/* --- DAFTARKAN SERVICE WORKER (agar aplikasi bisa dipakai OFFLINE) --- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(err=>console.error('Gagal mendaftarkan service worker:', err));
+  });
+}
+
+/* --- SIAPKAN MANIFEST PWA (agar bisa diinstall ke layar HP) --- */
+document.getElementById('app-manifest-link').setAttribute('href','./manifest.json');
+</script>
+</body>
+</html>

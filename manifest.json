@@ -1,0 +1,25 @@
+{
+  "name": "Aplikasi Buku Kerja Guru - SMP Plus Al Ibanah",
+  "short_name": "Buku Kerja Guru",
+  "description": "Aplikasi Buku Kerja Guru untuk pengelolaan dokumen pembelajaran, nilai proses siswa, dan jadwal mengajar.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#00020f",
+  "theme_color": "#00020f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
