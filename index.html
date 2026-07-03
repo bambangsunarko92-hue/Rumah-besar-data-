@@ -1727,297 +1727,102 @@ document.getElementById('app-manifest-link').setAttribute('href','./manifest.jso
 </script>
 
 </script>
-<!-- START: FITUR ISOALSI REKAP 10 PERTEMUAN CSV BY USER REQUEST -->
+
+<!-- START: LOGIKA REKAP 10 PERTEMUAN OFFLINE VERSI KUNCI TOTAL AMAN -->
 <script>
-function kelolaUiRekap() {
-    // 1. Cari area halaman Nilai Proses Anda
-    const areaNilaiProses = document.querySelector('#nilai-proses-section') || 
-                            document.querySelector('.nilai-proses-container') || 
-                            document.getElementById('nilai-proses') ||
-                            document.querySelector('[id*="nilai-proses"]') ||
-                            document.querySelector('[class*="nilai-proses"]');
-    
-    if (areaNilaiProses) {
-        // DETEKSI KETAT: Periksa apakah halaman Nilai Proses saat ini sedang tersembunyi (display: none atau tidak aktif)
-        const gayaHalaman = window.getComputedStyle(areaNilaiProses);
-        const apakahTersembunyi = gayaHalaman.display === 'none' || areaNilaiProses.classList.contains('hidden') || areaNilaiProses.closest('[style*="display: none"]');
-
-        let uiExist = document.getElementById('rekap-ui-isolated');
-
-        if (apakahTersembunyi) {
-            // Jika halaman Nilai Proses sedang ditutup/sembunyi, MAKA HAPUS kotak rekap dari layar agar halaman utama bersih!
-            if (uiExist) {
-                uiExist.remove();
-            }
-        } else {
-            // Jika halaman Nilai Proses sedang TERBUKA/AKTIF, barulah buat dan tampilkan kotaknya!
-            if (!uiExist) {
-                const uiWrapper = document.createElement('div');
-                uiWrapper.style.cssText = "margin: 20px auto; padding: 15px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; color: white; max-width: 95%; backdrop-filter: blur(10px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); z-index: 999;";
-                uiWrapper.id = "rekap-ui-isolated";
-                uiWrapper.innerHTML = `
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
-                        <label style="font-size:11px; color: #38bdf8; font-weight: bold; letter-spacing: 0.5px;">PERTEMUAN KE-</label>
-                        <select id="input_pertemuan_ke" style="padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: #0f172a; color: #fff; font-weight: bold; cursor: pointer;">
-                            ${Array.from({length: 10}, (_, i) => `<option value="${i+1}">Pertemuan ${i+1}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 5px;">
-                        <label style="font-size:11px; color: #38bdf8; font-weight: bold; letter-spacing: 0.5px;">JUDUL MATERI PELAJARAN</label>
-                        <input type="text" id="input_materi_rekap" placeholder="Contoh: Mengenal Keunggulan Lokasi Indonesia..." style="padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); width: 100%; box-sizing: border-box; background: #0f172a; color: #fff;">
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 5px; align-self: flex-end;">
-                        <button type="button" id="btn_download_csv_rekap" style="background: #22c55e; color: white; border: none; padding: 11px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">📊 Download CSV Rekap</button>
-                    </div>
-                `;
-                areaNilaiProses.insertBefore(uiWrapper, areaNilaiProses.firstChild);
-            }
-        }
-    }
-}
-
-// Periksa setiap setengah detik secara real-time status tombol menu yang aktif
-setInterval(kelolaUiRekap, 500);
-
-// Logika Intersepsi Tombol Simpan Nilai Harian Anda
-document.addEventListener("click", async function(e) {
-    const btnSimpanLama = e.target.closest('#btn-simpan-nilai') || e.target.closest('button[type="submit"]') || e.target.closest('.btn-simpan');
-    if (btnSimpanLama) {
-        const inputPertemuan = document.getElementById('input_pertemuan_ke');
-        if (!inputPertemuan) return;
-
-        const pertemuanKe = inputPertemuan.value;
-        const materiTeks = document.getElementById('input_materi_rekap').value;
-        const namaGuruAktif = document.querySelector('.user-profile span')?.innerText || "Guru";
-        const kelasAktif = document.querySelector('#select-kelas-siswa')?.value || document.querySelector('.kelas-aktif')?.innerText || "Umum";
-        
-        const barisSiswa = document.querySelectorAll('table tbody tr') || document.querySelectorAll('.siswa-row');
-        if (barisSiswa.length === 0) return;
-
-        const dataPenyimpananCloud = [];
-        barisSiswa.forEach(tr => {
-            const namaSiswa = tr.querySelector('.nama-siswa-kolom')?.innerText || tr.cells[1]?.innerText || tr.querySelector('.nama')?.innerText;
-            const nilaiProses = tr.querySelector('.nilai-proses-input')?.value || tr.querySelector('input')?.value || 0;
-            const keteranganSikap = tr.querySelector('.keterangan-sikap-teks')?.innerText || tr.querySelector('.keterangan')?.innerText || "";
-
-            if (namaSiswa) {
-                dataPenyimpananCloud.push({
-                    nama_guru: namaGuruAktif,
-                    kelas: kelasAktif,
-                    pertemuan_ke: parseInt(pertemuanKe),
-                    tanggal_jam: new Date().toISOString(),
-                    materi: materiTeks,
-                    nama_siswa: namaSiswa,
-                    nilai_proses: parseInt(nilaiProses),
-                    keterangan: keteranganSikap
-                });
-            }
-        });
-
-        if (dataPenyimpananCloud.length > 0 && typeof supabase !== 'undefined') {
-            try {
-                const { error } = await supabase.from('rekap_nilai_proses').insert(dataPenyimpananCloud);
-                if (error) console.error("Gagal simpan rekap:", error.message);
-                else console.log("Rekap harian berhasil disimpan di Supabase!");
-            } catch(err) {
-                console.error("Supabase Error:", err);
-            }
-        }
-    }
-});
-
-// Logika Membuat File Excel CSV Berjejer ke Samping
-document.addEventListener("click", async function(e) {
-    if (e.target && e.target.id === 'btn_download_csv_rekap') {
-        const kelasAktif = document.querySelector('#select-kelas-siswa')?.value || document.querySelector('.kelas-aktif')?.innerText || "Umum";
-        
-        // Membuat koneksi database mandiri dengan memanggil library Supabase secara paksa
-        let supabase = window.supabase;
-        
-        if (!supabase || typeof supabase.createClient !== 'function') {
-            // Jika library belum termuat, kita suntikkan library Supabase CDN secara real-time
-            await new Promise((resolve) => {
-                const script = document.createElement('script');
-                script.src = "https://jsdelivr.net";
-                script.onload = () => {
-                    supabase = window.supabase;
-                    resolve();
-                };
-                document.head.appendChild(script);
-            });
-        }
-
-        // Hubungkan langsung menggunakan kredensial asli proyek Anda
-        const supabaseUrl = "https://asdnsyzezpixyezapsfr.supabase.co";
-        const supabaseKey = "sb_publishable_1jKmCvrgt6wGETDqyvJX5w_1axJTO4I"; // MASUKKAN SISA ANON KEY PANJANG ANDA DI SINI!
-        
-        if (supabase && supabase.createClient) {
-            supabase = supabase.createClient(supabaseUrl, supabaseKey);
-        } else if (window.supabase && window.supabase.createClient) {
-            supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-        }
-
-       
-        const { data, error } = await supabase
-            .from('rekap_nilai_proses')
-            .select('*')
-            .eq('kelas', kelasAktif)
-            .order('nama_siswa', { ascending: true });
-
-        if (error || !data || data.length === 0) {
-            alert("Belum ada data nilai proses yang tersimpan untuk kelas " + kelasAktif);
-            return;
-        }
-
-        const daftarSiswaUnik = [...new Set(data.map(item => item.nama_siswa))];
-        const infoPertemuan = {};
-        for (let p = 1; p <= 10; p++) {
-            const sampel = data.find(d => d.pertemuan_ke === p);
-            if (sampel) {
-                infoPertemuan[p] = {
-                    tanggal: new Date(sampel.tanggal_jam).toLocaleDateString('id-ID') + " " + new Date(sampel.tanggal_jam).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}),
-                    materi: sampel.materi || "-"
-                };
-            } else {
-                infoPertemuan[p] = { tanggal: "", materi: "" };
-            }
-        }
-
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += `Mapel,IPS,`;
-        for (let p = 1; p <= 10; p++) { csvContent += `Pertemuan,,${p},`; }
-        csvContent += "\n";
-
-        csvContent += `Kelas,${kelasAktif},`;
-        for (let p = 1; p <= 10; p++) { csvContent += `Tanggal,,${infoPertemuan[p].tanggal},`; }
-        csvContent += "\n";
-
-        csvContent += `,,`;
-        for (let p = 1; p <= 10; p++) { csvContent += `Materi,,${infoPertemuan[p].materi},`; }
-        csvContent += "\n\n";
-
-        let headerKolom = "No,Nama Siswa,";
-        for (let p = 1; p <= 10; p++) { headerKolom += `Nilai Proses,Latihan,keterangan,`; }
-        csvContent += headerKolom + "\n";
-
-        daftarSiswaUnik.forEach((namaSiswa, index) => {
-            let barisSiswa = `${index + 1},${namaSiswa},`;
-            for (let p = 1; p <= 10; p++) {
-                const match = data.find(d => d.nama_siswa === namaSiswa && d.pertemuan_ke === p);
-                if (match) {
-                    barisSiswa += `${match.nilai_proses},,${match.keterangan},`;
-                } else {
-                    barisSiswa += `,,,`;
-                }
-            }
-            csvContent += barisSiswa + "\n";
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const linkDownload = document.createElement("a");
-        linkDownload.setAttribute("href", encodedUri);
-        linkDownload.setAttribute("download", `REKAP_PROSES_KELAS_${kelasAktif.replace(/\s+/g, '_')}.csv`);
-        document.body.appendChild(linkDownload);
-        linkDownload.click();
-        document.body.removeChild(linkDownload);
-    }
-});
-</script>
-<!-- START: LOGIKA REKAP 10 PERTEMUAN VERSI INTERNAL AKURAT -->
-<script>
-document.addEventListener("click", async function(e) {
-    if (e.target && e.target.id === 'btn_download_csv_rekap') {
-        e.preventDefault();
-        
-        // 1. KREDENSIAL CLOUD ASLI SUPABASE ANDA
-        const urlProyek = "https://supabase.co";
-        const kunciProyek = "sb_publishable_1jKmCvrgt6wGETDqyvJX5w_1axJTO4I";
-        
-        // 2. AMBIL NAMA KELAS LANGSUNG DARI TOMBOL PILIHAN KELAS UTAMA (100% AKURAT)
-        const selectorKelas = document.getElementById('select-kelas-siswa');
-        let kelasAktif = "Umum";
-        if (selectorKelas && selectorKelas.value) {
-            kelasAktif = selectorKelas.value.trim();
-        } else {
-            // Cadangan jika selector kelas tidak ketemu, coba baca dari judul halaman
-            const h2Judul = document.getElementById('title-kelas-terpilih') || document.querySelector('.page-title');
-            if (h2Judul && h2Judul.innerText.includes('Kelas')) {
-                kelasAktif = h2Judul.innerText.replace('Daftar Siswa Kelas', '').replace('Daftar Siswa', '').trim();
-            }
-        }
-
-        // 3. MENARIK DATA MENGGUNAKAN API INTERNAL SUPABASE
-        try {
-            const URL_TUGAS = `${urlProyek}/rest/v1/rekap_nilai_proses?kelas=eq.${encodeURIComponent(kelasAktif)}&select=*&order=nama_siswa.asc`;
+window.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener("click", function(e) {
+        if (e.target && e.target.id === 'btn_download_csv_rekap') {
+            e.preventDefault();
             
-            const responCloud = await fetch(URL_TUGAS, {
-                method: 'GET',
-                headers: {
-                    'apikey': kunciProyek,
-                    'Authorization': `Bearer ${kunciProyek}`,
-                    'Content-Type': 'application/json'
+            // 1. DETEKSI NAMA KELAS SECARA DINAMIS DARI JUDUL HALAMAN UTAMA ANDA
+            let kelasAktif = "Umum";
+            const h2Judul = document.getElementById('title-kelas-terpilih') || document.querySelector('.page-title') || document.querySelector('h2');
+            
+            if (h2Judul && h2Judul.innerText) {
+                const teksJudul = h2Judul.innerText.trim();
+                const posisiKataKelas = teksJudul.indexOf('Kelas');
+                
+                if (posisiKataKelas !== -1) {
+                    kelasAktif = teksJudul.substring(posisiKataKelas + 5).trim();
+                } else {
+                    kelasAktif = teksJudul.replace('Daftar Siswa Kelas', '').replace('Daftar Siswa', '').trim();
+                }
+            }
+            
+            if (kelasAktif === "Umum" || kelasAktif === "") {
+                const selectUtama = document.getElementById('select-kelas-siswa') || document.getElementById('select-kelas');
+                if (selectUtama && selectUtama.value) {
+                    kelasAktif = selectUtama.value.trim();
+                }
+            }
+
+            kelasAktif = kelasAktif.replace(':', '').trim();
+            if (kelasAktif === "") { kelasAktif = "Umum"; }
+
+            // 2. AMBIL DATA PERTEMUAN, MATERI, DAN WAKTU REAL-TIME
+            const inputPertemuan = document.getElementById('input_pertemuan_ke');
+            const nomorPertemuan = inputPertemuan ? parseInt(inputPertemuan.value) : 1;
+            const materiTeks = document.getElementById('input_materi_rekap')?.value || "-";
+            const waktuLokal = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+
+            // 3. LOGIKA AMBIL NAMA SISWA YANG BERAWALAN ANGKA DAN TITIK
+            let daftarSiswaLayar = [];
+            const semuaKomponenTeks = document.querySelectorAll('div, h3, p, span, button');
+            
+            semuaKomponenTeks.forEach(el => {
+                let teks = el.innerText ? el.innerText.trim() : "";
+                if (teks && /^\d+\.\s+[A-Za-z]/.test(teks)) {
+                    const barisPertama = teks.split('\n')[0].trim();
+                    let namaBersih = barisPertama.replace(/^\d+\.\s*/, '').trim();
+                    
+                    if (namaBersih.length > 2 && !namaBersih.includes('Kelas') && !namaBersih.includes('Kembali') && !namaBersih.includes('Download') && !namaBersih.includes('Materi')) {
+                        if (!daftarSiswaLayar.includes(namaBersih)) {
+                            daftarSiswaLayar.push(namaBersih);
+                        }
+                    }
                 }
             });
 
-            if (!responCloud.ok) {
-                alert("Gagal terhubung ke server cloud. Pastikan tabel di Supabase sudah siap.");
+            if (daftarSiswaLayar.length === 0) {
+                alert("Sistem tidak mendeteksi adanya daftar siswa di layar. Silakan pilih kelas terlebih dahulu.");
                 return;
             }
 
-            const data = await responCloud.json();
+            daftarSiswaLayar.sort();
 
-            if (!data || data.length === 0) {
-                alert("Belum ada data nilai proses harian yang tersimpan di cloud untuk kelas " + kelasAktif);
-                return;
-            }
-
-            // 4. KELOMPOKKAN DATA SISWA UNTUK BARIS EXCEL
-            const daftarSiswaUnik = [...new Set(data.map(item => item.nama_siswa))];
-            const infoPertemuan = {};
-            for (let p = 1; p <= 10; p++) {
-                const sampel = data.find(d => d.pertemuan_ke === p);
-                if (sampel) {
-                    infoPertemuan[p] = {
-                        tanggal: new Date(sampel.tanggal_jam).toLocaleDateString('id-ID') + " " + new Date(sampel.tanggal_jam).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}),
-                        materi: sampel.materi || "-"
-                    };
-                } else {
-                    infoPertemuan[p] = { tanggal: "", materi: "" };
-                }
-            }
-
-            // 5. MENYUSUN STRUKTUR EXCEL BERJEJER KE Samping
+            // 4. MENYUSUN STRUKTUR HEADERS EXCEL BERJEJER KE SAMPING
             let csvContent = "\uFEFF"; 
             csvContent += `Mapel,IPS,`;
             for (let p = 1; p <= 10; p++) { csvContent += `Pertemuan,,${p},`; }
             csvContent += "\n";
 
             csvContent += `Kelas,${kelasAktif},`;
-            for (let p = 1; p <= 10; p++) { csvContent += `Tanggal,,${infoPertemuan[p].tanggal},`; }
+            for (let p = 1; p <= 10; p++) { 
+                csvContent += `Tanggal,,${p === nomorPertemuan ? waktuLokal : ""},`; 
+            }
             csvContent += "\n";
 
             csvContent += `,,`;
-            for (let p = 1; p <= 10; p++) { csvContent += `Materi,,${infoPertemuan[p].materi},`; }
+            for (let p = 1; p <= 10; p++) { 
+                csvContent += `Materi,,${p === nomorPertemuan ? materiTeks : ""},`; 
+            }
             csvContent += "\n\n";
 
             let headerKolom = "No,Nama Siswa,";
             for (let p = 1; p <= 10; p++) { headerKolom += `Nilai Proses,Latihan,keterangan,`; }
             csvContent += headerKolom + "\n";
 
-            daftarSiswaUnik.forEach((namaSiswa, index) => {
+            // 5. MEMASUKKAN DAFTAR NAMA SISWA YANG BERSIH KE BARIS EXCEL
+            daftarSiswaLayar.forEach((namaSiswa, index) => {
                 let barisSiswa = `${index + 1},${namaSiswa},`;
                 for (let p = 1; p <= 10; p++) {
-                    const match = data.find(d => d.nama_siswa === namaSiswa && d.pertemuan_ke === p);
-                    if (match) {
-                        barisSiswa += `${match.nilai_proses},,${match.keterangan},`;
-                    } else {
-                        barisSiswa += `,,,`;
-                    }
+                    barisSiswa += `,,,`; 
                 }
                 csvContent += barisSiswa + "\n";
             });
 
-            // 6. EKSEKUSI DOWNLOAD OTOMATIS AMAN
+            // 6. EKSEKUSI DOWNLOAD OTOMATIS AMAN TANPA CRASH
             const blobFile = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const linkDownload = document.createElement("a");
             linkDownload.href = URL.createObjectURL(blobFile);
@@ -2025,15 +1830,12 @@ document.addEventListener("click", async function(e) {
             document.body.appendChild(linkDownload);
             linkDownload.click();
             document.body.removeChild(linkDownload);
-
-        } catch (err) {
-            console.error("Error Sistem:", err);
-            alert("Terjadi gangguan jaringan cloud, silakan coba sesaat lagi.");
         }
-    }
+    });
 });
 </script>
-<!-- END: LOGIKA REKAP 10 PERTEMUAN VERSI INTERNAL AKURAT -->
+<!-- END: LOGIKA REKAP 10 PERTEMUAN OFFLINE VERSI KUNCI TOTAL AMAN -->
+
 
 </body>
 </html>
