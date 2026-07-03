@@ -1923,7 +1923,7 @@ document.addEventListener("click", async function(e) {
     }
 });
 </script>
-<!-- START: LOGIKA REKAP 10 PERTEMUAN VERSI MANDIRI TANPA INTERNET -->
+<!-- START: LOGIKA REKAP 10 PERTEMUAN VERSI INTERNAL AKURAT -->
 <script>
 document.addEventListener("click", async function(e) {
     if (e.target && e.target.id === 'btn_download_csv_rekap') {
@@ -1933,16 +1933,20 @@ document.addEventListener("click", async function(e) {
         const urlProyek = "https://supabase.co";
         const kunciProyek = "sb_publishable_1jKmCvrgt6wGETDqyvJX5w_1axJTO4I";
         
-        // 2. DETEKSI NAMA KELAS AKTIF OTOMATIS
+        // 2. AMBIL NAMA KELAS LANGSUNG DARI TOMBOL PILIHAN KELAS UTAMA (100% AKURAT)
+        const selectorKelas = document.getElementById('select-kelas-siswa');
         let kelasAktif = "Umum";
-        const h2Judul = document.getElementById('title-kelas-terpilih') || document.querySelector('.page-title');
-        if (h2Judul && h2Judul.innerText.includes('Kelas')) {
-            kelasAktif = h2Judul.innerText.replace('Daftar Siswa Kelas', '')?.trim() || "Umum";
+        if (selectorKelas && selectorKelas.value) {
+            kelasAktif = selectorKelas.value.trim();
         } else {
-            kelasAktif = document.getElementById('select-kelas-siswa')?.value || "Umum";
+            // Cadangan jika selector kelas tidak ketemu, coba baca dari judul halaman
+            const h2Judul = document.getElementById('title-kelas-terpilih') || document.querySelector('.page-title');
+            if (h2Judul && h2Judul.innerText.includes('Kelas')) {
+                kelasAktif = h2Judul.innerText.replace('Daftar Siswa Kelas', '').replace('Daftar Siswa', '').trim();
+            }
         }
 
-        // 3. TRIK JALUR OFFLINE: Menarik data langsung lewat API internal tanpa perlu library luar
+        // 3. MENARIK DATA MENGGUNAKAN API INTERNAL SUPABASE
         try {
             const URL_TUGAS = `${urlProyek}/rest/v1/rekap_nilai_proses?kelas=eq.${encodeURIComponent(kelasAktif)}&select=*&order=nama_siswa.asc`;
             
@@ -1982,8 +1986,8 @@ document.addEventListener("click", async function(e) {
                 }
             }
 
-            // 5. MENYUSUN STRUKTUR EXCEL BERJEJER KE SAMPING
-            let csvContent = "\uFEFF"; // Trik khusus agar Excel Indonesia membaca tanda koma dengan rapi
+            // 5. MENYUSUN STRUKTUR EXCEL BERJEJER KE Samping
+            let csvContent = "\uFEFF"; 
             csvContent += `Mapel,IPS,`;
             for (let p = 1; p <= 10; p++) { csvContent += `Pertemuan,,${p},`; }
             csvContent += "\n";
@@ -2013,7 +2017,7 @@ document.addEventListener("click", async function(e) {
                 csvContent += barisSiswa + "\n";
             });
 
-            // 6. EKSEKUSI DOWNLOAD OTOMATIS AMAN TANPA MACET
+            // 6. EKSEKUSI DOWNLOAD OTOMATIS AMAN
             const blobFile = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const linkDownload = document.createElement("a");
             linkDownload.href = URL.createObjectURL(blobFile);
@@ -2029,7 +2033,7 @@ document.addEventListener("click", async function(e) {
     }
 });
 </script>
-<!-- END: LOGIKA REKAP 10 PERTEMUAN VERSI MANDIRI TANPA INTERNET -->
+<!-- END: LOGIKA REKAP 10 PERTEMUAN VERSI INTERNAL AKURAT -->
 
 </body>
 </html>
