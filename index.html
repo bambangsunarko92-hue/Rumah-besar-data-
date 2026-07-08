@@ -4,7 +4,86 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Aplikasi Guru - SMP Plus Al Ibanah</title>
-<meta name="theme-color" content="#00020f">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// SUPABASE - API Key sudah diisi
+const _U='https://asdnsyzezpixyezapsfr.supabase.co';
+const _K='sb_publishable_1jKmCvrgt6wGETDqyvJX5w_1axJTO4I';
+let _sb; try { _sb=supabase.createClient(_U,_K); } catch(e) { console.error('Supabase error:', e); }
+
+// Session
+function _gs(){ try { return JSON.parse(localStorage.getItem('gs')); } catch(e) { return null; } }
+function _ss(g){ localStorage.setItem('gs', JSON.stringify(g)); }
+function _cs(){ localStorage.removeItem('gs'); }
+
+// Hash password
+async function _h(p){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// Auto-hide overlay jika sudah login
+(function(){
+  const s = _gs();
+  if(s && s.id){
+    document.addEventListener('DOMContentLoaded', function(){
+      const el = document.getElementById('lo');
+      if(el) el.style.display = 'none';
+    });
+  }
+})();
+
+// LOGIN
+async function prosesLogin(){
+  const nama = document.getElementById('ln').value.trim();
+  const pw = document.getElementById('lp').value.trim();
+  const errEl = document.getElementById('le');
+  if(!_sb){ errEl.textContent='❌ Error koneksi!'; return; }
+  if(!nama || pw.length!==6){ errEl.textContent='⚠️ Isi nama & password 6 angka!'; return; }
+  errEl.textContent='⏳...';
+  const hash = await _h(pw);
+  const { data, error } = await _sb.from('guru').select('*').eq('nama',nama).eq('password_hash',hash).single();
+  if(error || !data){ errEl.textContent='❌ Nama/password salah!'; return; }
+  _ss({ id:data.id, nama:data.nama, role:data.role });
+  // Update profil
+  document.getElementById('input-user-name').value = data.nama;
+  ['display-user-name','display-user-name-landing'].forEach(function(id){
+    var e = document.getElementById(id); if(e) e.textContent = data.nama;
+  });
+  ['display-avatar','display-avatar-landing'].forEach(function(id){
+    var e = document.getElementById(id); if(e) e.textContent = data.nama.charAt(0).toUpperCase();
+  });
+  document.getElementById('lo').style.display = 'none';
+}
+
+// Toggle form registrasi
+function toggleReg(){
+  var f = document.getElementById('rf');
+  f.style.display = (f.style.display === 'none') ? 'block' : 'none';
+}
+
+// REGISTRASI
+async function prosesRegister(){
+  var nama = document.getElementById('rn').value.trim();
+  var pw = document.getElementById('rp').value.trim();
+  var st = document.getElementById('rs');
+  if(!_sb){ st.textContent='❌ Error koneksi!'; return; }
+  if(nama.length < 3){ st.style.color='#ff6b6b'; st.textContent='⚠️ Min 3 karakter!'; return; }
+  if(!/^\d{6}$/.test(pw)){ st.style.color='#ff6b6b'; st.textContent='⚠️ Password 6 angka!'; return; }
+  st.style.color='#7ecfff'; st.textContent='⏳...';
+  var hash = await _h(pw);
+  var { data, error } = await _sb.from('guru').insert({ nama:nama, password_hash:hash }).select().single();
+  if(error){
+    st.style.color='#ff6b6b';
+    st.textContent = (error.code === '23505') ? '❌ Nama sudah ada!' : '❌ '+error.message;
+    return;
+  }
+  st.style.color='#00c97a';
+  st.textContent = '✅ Silakan login!';
+  document.getElementById('rn').value = '';
+  document.getElementById('rp').value = '';
+}
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -642,6 +721,75 @@ p, span, div, td, li, label, h1, h2, h3, h4, h5, h6 {
 
 </head>
 <body>
+<!-- ===== LOGIN OVERLAY ===== -->
+<div id="lo" style="position:fixed;inset:0;z-index:99999;
+background:radial-gradient(ellipse at 30% 40%, rgba(2,8,40,0.95) 0%, rgba(0,2,15,0.98) 100%);
+display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+<div style="background:rgba(255,255,255,0.08);backdrop-filter:blur(24px);
+border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:40px 36px;
+max-width:400px;width:90vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+<div style="font-family:'Orbitron',sans-serif;font-size:22px;color:#00d4ff;
+margin-bottom:8px;text-shadow:0 0 20px rgba(0,212,255,0.5);">Buku Kerja Guru</div>
+<div style="font-size:12px;color:#88b8d8;margin-bottom:24px;">SMP Plus Al Ibanah</div>
+
+<div id="login-form">
+<div style="margin-bottom:14px;text-align:left;">
+<label style="font-size:11px;color:#38bdf8;font-weight:bold;">NAMA GURU</label>
+<input type="text" id="ln" placeholder="Nama lengkap..."
+style="width:100%;padding:12px;margin-top:6px;border-radius:8px;
+background:#0f172a;border:1px solid rgba(255,255,255,0.15);color:#fff;
+font-size:14px;outline:none;box-sizing:border-box;">
+</div>
+
+<div style="margin-bottom:20px;text-align:left;">
+<label style="font-size:11px;color:#38bdf8;font-weight:bold;">PASSWORD (6 ANGKA)</label>
+<input type="password" id="lp" maxlength="6" inputmode="numeric"
+placeholder="******"
+style="width:100%;padding:12px;margin-top:6px;border-radius:8px;
+background:#0f172a;border:1px solid rgba(255,255,255,0.15);color:#fff;
+font-size:14px;outline:none;box-sizing:border-box;letter-spacing:8px;">
+</div>
+
+<button id="btn-login" onclick="prosesLogin()" style="width:100%;padding:14px;border-radius:10px;
+cursor:pointer;background:linear-gradient(135deg,#0057b8,#00d4ff);color:white;border:none;
+font-weight:700;font-size:15px;box-shadow:0 4px 20px rgba(0,150,255,0.4);">🚀 MASUK</button>
+<div id="le" style="color:#ff6b6b;font-size:12px;margin-top:10px;min-height:18px;"></div>
+</div>
+
+<div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);">
+<button onclick="toggleReg()" style="background:none;border:none;color:#7ecfff;
+font-size:12px;cursor:pointer;text-decoration:underline;">📝 Daftar Guru Baru</button>
+</div>
+
+<div id="rf" style="display:none;margin-top:16px;padding-top:16px;
+border-top:1px solid rgba(255,255,255,0.1);">
+<div style="margin-bottom:10px;text-align:left;">
+<label style="font-size:11px;color:#38bdf8;font-weight:bold;">NAMA GURU BARU</label>
+<input type="text" id="rn" placeholder="Nama lengkap..."
+style="width:100%;padding:10px;margin-top:4px;border-radius:6px;
+background:#0f172a;border:1px solid rgba(255,255,255,0.15);color:#fff;
+font-size:13px;outline:none;box-sizing:border-box;">
+</div>
+
+<div style="margin-bottom:10px;text-align:left;">
+<label style="font-size:11px;color:#38bdf8;font-weight:bold;">PASSWORD (6 ANGKA)</label>
+<input type="password" id="rp" maxlength="6" inputmode="numeric"
+style="width:100%;padding:10px;margin-top:4px;border-radius:6px;
+background:#0f172a;border:1px solid rgba(255,255,255,0.15);color:#fff;
+font-size:13px;outline:none;box-sizing:border-box;letter-spacing:6px;">
+</div>
+
+<button onclick="prosesRegister()" style="width:100%;padding:12px;border-radius:8px;
+cursor:pointer;background:linear-gradient(135deg,#059669,#34d399);color:white;border:none;
+font-weight:700;font-size:14px;">✅ DAFTAR</button>
+<div id="rs" style="font-size:12px;margin-top:8px;min-height:18px;"></div>
+</div>
+
+</div>
+</div>
+
+
+
 
 <canvas id="space-canvas"></canvas>
 
@@ -925,6 +1073,7 @@ p, span, div, td, li, label, h1, h2, h3, h4, h5, h6 {
     </div>
   </div>
 </div>
+// ===== SUPABASE INIT (dengan error handling) =====
 
 <script>
 /* =========================================================
@@ -967,16 +1116,33 @@ function dbGet(key){
     req.onerror = (e)=> reject(e);
   })).catch(err=>{ console.error('Gagal membaca data', key, err); return undefined; });
 }
-
-function dbSetDoc(id, doc){ return dbSet('doc_'+id, doc); }
-function dbDeleteDoc(id){
-  return openAppDB().then(db=> new Promise((resolve, reject)=>{
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).delete('doc_'+id);
-    tx.oncomplete = ()=> resolve(true);
-    tx.onerror = (e)=> reject(e);
-  })).catch(err=>{ console.error('Gagal menghapus dokumen', id, err); return false; });
+// Ganti fungsi dbSetDoc dengan versi Supabase
+async function dbSetDoc(id, doc) {
+  if (!currentGuru) return false;
+  
+  const { error } = await supabase.from('dokumen').upsert({
+    id: id,
+    guru_id: currentGuru.id,
+    nama: doc.nama,
+    kategori: doc.kategori,
+    isi: doc.isi || ''
+  }, { onConflict: 'id' });
+  
+  return !error;
 }
+
+// Ganti dbGetAllDocs
+async function dbGetAllDocs() {
+  if (!currentGuru) return [];
+  
+  const { data, error } = await supabase
+    .from('dokumen')
+    .select('*')
+    .eq('guru_id', currentGuru.id);
+  
+  return error ? [] : (data || []);
+}
+
 function dbGetAllDocs(){
   return openAppDB().then(db=> new Promise((resolve, reject)=>{
     const tx = db.transaction(STORE_NAME, 'readonly');
@@ -1789,7 +1955,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            daftarSiswaLayar.sort();
+            // (Opsional) Nonaktifkan sort jika Anda ingin urutan sesuai dengan tampilan UI layar
+            // daftarSiswaLayar.sort();
 
             // 4. MENYUSUN STRUKTUR HEADERS EXCEL BERJEJER KE SAMPING
             let csvContent = "\uFEFF"; 
@@ -1813,14 +1980,45 @@ window.addEventListener('DOMContentLoaded', () => {
             for (let p = 1; p <= 10; p++) { headerKolom += `Nilai Proses,Latihan,keterangan,`; }
             csvContent += headerKolom + "\n";
 
-            // 5. MEMASUKKAN DAFTAR NAMA SISWA YANG BERSIH KE BARIS EXCEL
+            // 5. MEMASUKKAN DAFTAR NAMA SISWA DAN NILAI OTOMATIS KE BARIS EXCEL
             daftarSiswaLayar.forEach((namaSiswa, index) => {
                 let barisSiswa = `${index + 1},${namaSiswa},`;
-                for (let p = 1; p <= 10; p++) {
-                    barisSiswa += `,,,`; 
+
+                let nilaiProses = "";
+                let nilaiLatihan = "";
+                let keteranganTeks = "";
+
+                // PRIORITAS 1: Ambil data dari cache lokal (jika siswa sudah diberi nilai via tombol klik 6 kriteria)
+                let keyRekap = kelasAktif + "_" + namaSiswa;
+                if (typeof rekapNilaiSiswa !== 'undefined' && rekapNilaiSiswa[keyRekap]) {
+		if(rekapNilaiSiswa[keyRekap].nilai !== undefined) nilaiProses = rekapNilaiSiswa[keyRekap].nilai;
+    if(rekapNilaiSiswa[keyRekap].keterangan !== undefined) keteranganTeks = rekapNilaiSiswa[keyRekap].keterangan;
+}
+                                     // PRIORITAS 2 (Sesuai Permintaan): Cari Terlebih Dahulu dari Element Input di baris HTML jika ada
+                // Kombinasi mengambil baris dari tabel konvensional atau divs (.siswa-row)
+                let semuaBaris = [...document.querySelectorAll('table tbody tr'), ...document.querySelectorAll('.siswa-row')];
+                let barisTarget = semuaBaris.find(el => el.innerText && el.innerText.includes(namaSiswa));
+
+                if (barisTarget) {
+                    const inputs = barisTarget.querySelectorAll('input[type="number"], input[type="text"], select');
+                    if (inputs && inputs.length > 0) {
+                        if (inputs[0]?.value) nilaiProses = inputs[0].value;
+                        if (inputs[1]?.value) nilaiLatihan = inputs[1].value;
+                        if (inputs[2]?.value) keteranganTeks = inputs[2].value;
+                    }
                 }
+
+                // Loop otomatis untuk mengisi kolom pertemuan 1 sampai 10
+                for (let p = 1; p <= 10; p++) {
+                    if (p === nomorPertemuan) {
+                        barisSiswa += `${nilaiProses},${nilaiLatihan},${keteranganTeks},`;
+                    } else {
+                        barisSiswa += `,,,`;
+                    }
+                }
+
                 csvContent += barisSiswa + "\n";
-            });
+            }); // LOOP FOREACH BERAKHIR DI SINI (BERSIH DARI DUPLIKASI!)
 
             // 6. EKSEKUSI DOWNLOAD OTOMATIS AMAN TANPA CRASH
             const blobFile = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1837,5 +2035,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <!-- END: LOGIKA REKAP 10 PERTEMUAN OFFLINE VERSI KUNCI TOTAL AMAN -->
 
 
+
 </body>
+
 </html>
