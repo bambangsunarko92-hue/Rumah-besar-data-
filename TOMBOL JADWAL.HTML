@@ -115,7 +115,30 @@ var SLOT = [
 ];
 function isIst(i) { return i==3||i==7; }
 function hJP(d,e){var j=0;for(var i=d;i<=e;i++){if(!isIst(i))j++}return j}
-var MAPEL=['PAI - Aqidah','PAI - Fiqih','PAI - Tarikh','PAI - Tafsif','Pendidikan Pancasila (PKn)','Bahasa Indonesia','Matematika','Ilmu Pengetahuan Alam (IPA)','Ilmu Pengetahuan Sosial (IPS)','Bahasa Inggris','Pendidikan Jasmani Olahraga dan Kesehatan','Informatika','Seni Rupa/Seni Budaya','Prakarya (PKWU)','Bahasa Arab','Al-Quran Al-Karim'];
+var MAPEL=['PAI - Aqidah','PAI - Fiqih','PAI - Tarikh','PAI - Tafsif','Pendidikan Pancasila (PKn)','Bahasa Indonesia','Matematika','Ilmu Pengetahuan Alam (IPA)','Ilmu Pengetahuan Sosial (IPS)','Bahasa Inggris','Pendidikan Jasmani Olahraga dan Kesehatan','Informatika','Seni Rupa/Seni Budaya','Prakarya (PKWU)','Bahasa Arab','Al-Quran Al-Karim' var MAPEL=[
+  'PAI',
+  'Pendidikan Pancasila (PKn)',
+  'Bahasa Indonesia',
+  'Bahasa Inggris',
+  'Matematika Umum',
+  'Sejarah Indonesia',
+  'Pendidikan Jasmani Olahraga dan Kesehatan',
+  'Seni Rupa/Seni Budaya',
+  'Informatika',
+  'Fisika',
+  'Kimia',
+  'Biologi',
+  'Geografi',
+  'Ekonomi',
+  'Sosiologi',
+  'Sejarah',
+  'Bahasa Arab',
+  'Al-Quran Al-Karim',
+  'Matematika Tingkat Lanjut',
+  'Sejarah Tingkat Lanjut',
+  'B. Inggris Tingkat Lanjut'
+];
+];
 var HARI=['Senin','Selasa','Rabu','Kamis','Jumat'];
 var DEFAULT={Senin:[{d:1,e:2,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXB'},{d:3,e:3,m:'Istirahat',k:''},{d:5,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXA'},{d:7,e:7,m:'Istirahat / Sholat',k:''},{d:8,e:9,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIIA'},{d:10,e:11,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIIB'}],Selasa:[{d:1,e:2,m:'PAI - Aqidah',k:'XA'},{d:3,e:3,m:'Istirahat',k:''},{d:4,e:5,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIIB'},{d:6,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXA'},{d:7,e:7,m:'Istirahat / Sholat',k:''},{d:8,e:8,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXA'}],Rabu:[{d:1,e:2,m:'PAI - Aqidah',k:'XIA'},{d:3,e:3,m:'Istirahat',k:''},{d:4,e:5,m:'PAI - Aqidah',k:'XIA'},{d:6,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIA'},{d:7,e:7,m:'Istirahat / Sholat',k:''},{d:11,e:11,m:'Prakarya (PKWU)',k:'IXA'}],Kamis:[{d:3,e:3,m:'Istirahat',k:''},{d:4,e:5,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIA'},{d:6,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXB'},{d:7,e:7,m:'Istirahat / Sholat',k:''},{d:8,e:8,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXB'}],Jumat:[{d:3,e:3,m:'Istirahat',k:''},{d:4,e:5,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIIA'},{d:6,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIA'},{d:7,e:7,m:'Istirahat / Sholat',k:''}]};
 var data=loadData();
