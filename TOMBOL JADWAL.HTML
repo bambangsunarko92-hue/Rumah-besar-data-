@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📋 Jadwal Mengajar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+    body{background:#f1f5f9;color:#1e293b;display:flex;justify-content:center;padding:2rem 1rem}
+    .app{background:#fff;width:100%;max-width:560px;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.08);overflow:hidden}
+    .name-section{padding:1rem 1.5rem .5rem;background:#fff}
+    .name-wrapper{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:2px 14px}
+    .name-wrapper:focus-within{border-color:#4f46e5}
+    .name-wrapper input{flex:1;border:none;background:transparent;padding:10px 0;font-size:.9rem;font-weight:500;outline:none}
+    .name-wrapper input::placeholder{color:#94a3b8}
+    .header{background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+    .header-left h1{font-size:1.3rem;font-weight:600}
+    .header-left .greeting{font-size:.8rem;opacity:.9}
+    .header-left .date-sub{font-size:.7rem;opacity:.7}
+    .btn-edit{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:8px 14px;border-radius:40px;font-size:.75rem;cursor:pointer;white-space:nowrap}
+    .btn-edit:hover{background:rgba(255,255,255,.3)}
+    .tabs{display:flex;gap:4px;padding:1rem 1.5rem;border-bottom:1px solid #e2e8f0;overflow-x:auto}
+    .tab{flex:1;text-align:center;padding:8px 0;border-radius:40px;font-size:.8rem;font-weight:500;color:#94a3b8;background:transparent;border:none;cursor:pointer;white-space:nowrap}
+    .tab.active{background:#4f46e5;color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.3)}
+    .tab .badge{display:inline-block;background:#e2e8f0;color:#64748b;font-size:.6rem;padding:1px 7px;border-radius:20px;margin-left:4px;font-weight:600}
+    .tab.active .badge{background:rgba(255,255,255,.3);color:#fff}
+    .body{padding:1.5rem}
+    .card{border:1px solid #e2e8f0;border-radius:16px;padding:1rem 1.2rem;margin-bottom:10px;display:flex;align-items:center;gap:1rem;background:#fff}
+    .card.istirahat{background:#f8fafc;opacity:.65}
+    .time{text-align:center;min-width:80px;padding-right:1rem;border-right:2px dashed #e2e8f0}
+    .time .start{font-weight:600;color:#4f46e5;font-size:.85rem}
+    .time .end{font-size:.7rem;color:#94a3b8}
+    .jp-under{font-size:.65rem;font-weight:600;color:#f59e0b;margin-top:2px}
+    .info{flex:1}
+    .info h3{font-size:1rem}
+    .info p{font-size:.78rem;color:#64748b;margin-top:2px}
+    .info .label-istirahat{color:#94a3b8;font-style:italic;font-size:.85rem}
+    .empty{text-align:center;color:#94a3b8;padding:3rem 0;font-style:italic}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;justify-content:center;align-items:center;padding:1rem}
+    .modal-overlay.show{display:flex}
+    .modal{background:#fff;width:100%;max-width:620px;max-height:90vh;border-radius:20px;padding:1.5rem;overflow-y:auto}
+    .modal h2{font-size:1.2rem;margin-bottom:.5rem}
+    .modal .info-edit{font-size:.75rem;color:#64748b;margin-bottom:1rem;background:#f8fafc;padding:10px 14px;border-radius:12px;border:1px solid #e2e8f0;line-height:1.6}
+    .modal-hari{background:#f8fafc;border-radius:14px;padding:1rem;margin-bottom:1rem;border:1px solid #e2e8f0}
+    .modal-hari h3{font-size:.9rem;color:#4f46e5;margin-bottom:.6rem}
+    .entry-row{display:grid;grid-template-columns:1fr 1fr 1.6fr 1fr 28px;gap:5px;align-items:center;margin-bottom:5px;background:#fff;padding:5px 8px;border-radius:10px;border:1px solid #e2e8f0}
+    .entry-row select,.entry-row input{font-size:.72rem;padding:5px 4px;border:1px solid #e2e8f0;border-radius:8px;outline:none;font-family:'Poppins',sans-serif;width:100%;background:#fff}
+    .entry-row select:focus,.entry-row input:focus{border-color:#4f46e5}
+    .entry-row .btn-hapus{background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;padding:2px;line-height:1}
+    .entry-row.istirahat-row{background:#f1f5f9;opacity:.7}
+    .entry-row.istirahat-row .inp-k{background:#e2e8f0}
+    .jp-hitung{font-size:.65rem;color:#6366f1;font-weight:600;text-align:right;padding:2px 4px}
+    .btn-tambah{font-size:.75rem;color:#4f46e5;background:#eef2ff;border:1px dashed #4f46e5;border-radius:10px;padding:6px 12px;cursor:pointer;margin-top:4px;width:100%;text-align:center}
+    .btn-tambah:hover{background:#e0e7ff}
+    .modal-actions{display:flex;gap:10px;margin-top:1rem}
+    .modal-actions button{flex:1;padding:12px;border-radius:14px;font-weight:600;font-size:.85rem;border:none;cursor:pointer}
+    .btn-simpan{background:#4f46e5;color:#fff}
+    .btn-batal{background:#f1f5f9;color:#64748b}
+    .btn-reset{background:transparent;color:#ef4444;border:1px solid #fecaca!important;padding:8px 16px;border-radius:40px;cursor:pointer;margin-top:8px;font-size:.75rem}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="name-section">
+    <div class="name-wrapper">
+      <span>👤</span>
+      <input type="text" id="nameInput" placeholder="Nama guru..." maxlength="40">
+    </div>
+  </div>
+  <div class="header">
+    <div class="header-left">
+      <h1>📋 Jadwal</h1>
+      <div class="greeting" id="greeting">Selamat mengajar 👋</div>
+      <div class="date-sub" id="date-label"></div>
+    </div>
+    <button class="btn-edit" id="btnOpenEdit">✏️ Edit</button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="body" id="body"></div>
+</div>
+
+<div class="modal-overlay" id="modalEdit">
+  <div class="modal">
+    <h2>✏️ Edit Jadwal</h2>
+    <div class="info-edit">
+      Pilih <b>Jam Mulai</b> dan <b>Jam Akhir</b> dari dropdown.<br>
+      Contoh: Jam 2 → Jam 3 = 2 JP. JP otomatis dihitung.
+    </div>
+    <div id="modalFields"></div>
+    <div class="modal-actions">
+      <button class="btn-batal" id="btnBatal">Batal</button>
+      <button class="btn-simpan" id="btnSimpan">✅ Simpan</button>
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <button class="btn-reset" id="btnReset">↻ Reset ke jadwal awal</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SLOT = [
+  {l:'Jam 1',   a:'07:30', b:'08:10'},
+  {l:'Jam 2',   a:'08:10', b:'08:50'},
+  {l:'Jam 3',   a:'08:50', b:'09:30'},
+  {l:'Istirahat 1', a:'09:30', b:'09:50'},
+  {l:'Jam 4',   a:'09:50', b:'10:30'},
+  {l:'Jam 5',   a:'10:30', b:'11:10'},
+  {l:'Jam 6',   a:'11:10', b:'11:50'},
+  {l:'Istirahat 2', a:'11:50', b:'13:10'},
+  {l:'Jam 7',   a:'13:10', b:'13:50'},
+  {l:'Jam 8',   a:'13:50', b:'14:30'},
+  {l:'Jam 9',   a:'14:30', b:'15:10'},
+  {l:'Jam 10',  a:'15:10', b:'15:50'}
+];
+function isIst(i) { return i==3||i==7; }
+function hJP(d,e){var j=0;for(var i=d;i<=e;i++){if(!isIst(i))j++}return j}
+var MAPEL=['PAI - Aqidah','PAI - Fiqih','PAI - Tarikh','PAI - Tafsif','Pendidikan Pancasila (PKn)','Bahasa Indonesia','Matematika','Ilmu Pengetahuan Alam (IPA)','Ilmu Pengetahuan Sosial (IPS)','Bahasa Inggris','Pendidikan Jasmani Olahraga dan Kesehatan','Informatika','Seni Rupa/Seni Budaya','Prakarya (PKWU)','Bahasa Arab','Al-Quran Al-Karim'];
+var HARI=['Senin','Selasa','Rabu','Kamis','Jumat'];
+var DEFAULT={Senin:[{d:1,e:2,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXB'},{d:3,e:3,m:'Istirahat',k:''},{d:5,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXA'},{d:7,e:7,m:'Istirahat / Sholat',k:''},{d:8,e:9,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIIA'},{d:10,e:11,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIIB'}],Selasa:[{d:1,e:2,m:'PAI - Aqidah',k:'XA'},{d:3,e:3,m:'Istirahat',k:''},{d:4,e:5,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIIB'},{d:6,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXA'},{d:7,e:7,m:'Istirahat / Sholat',k:''},{d:8,e:8,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXA'}],Rabu:[{d:1,e:2,m:'PAI - Aqidah',k:'XIA'},{d:3,e:3,m:'Istirahat',k:''},{d:4,e:5,m:'PAI - Aqidah',k:'XIA'},{d:6,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIA'},{d:7,e:7,m:'Istirahat / Sholat',k:''},{d:11,e:11,m:'Prakarya (PKWU)',k:'IXA'}],Kamis:[{d:3,e:3,m:'Istirahat',k:''},{d:4,e:5,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIA'},{d:6,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXB'},{d:7,e:7,m:'Istirahat / Sholat',k:''},{d:8,e:8,m:'Ilmu Pengetahuan Sosial (IPS)',k:'IXB'}],Jumat:[{d:3,e:3,m:'Istirahat',k:''},{d:4,e:5,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIIA'},{d:6,e:6,m:'Ilmu Pengetahuan Sosial (IPS)',k:'VIIA'},{d:7,e:7,m:'Istirahat / Sholat',k:''}]};
+var data=loadData();
+function loadData(){try{var s=localStorage.getItem('jMv2');if(s){var p=JSON.parse(s);if(p.Senin&&p.Senin[0]&&p.Senin[0].d!==undefined)return p}}catch(e){}return JSON.parse(JSON.stringify(DEFAULT))}
+function simpan(){localStorage.setItem('jMv2',JSON.stringify(data))}
+function resetData(){localStorage.removeItem('jMv2');data=JSON.parse(JSON.stringify(DEFAULT));simpan();renderAll()}
+var nh=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+var hi=nh[new Date().getDay()];if(HARI.indexOf(hi)==-1)hi='Senin';
+var body=document.getElementById('body'),tabs=document.getElementById('tabs');
+var ni=document.getElementById('nameInput'),gr=document.getElementById('greeting');
+document.getElementById('date-label').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+var sn=localStorage.getItem('nm');if(sn){ni.value=sn;gr.textContent='Selamat mengajar, '+sn+' 👋';}
+ni.oninput=function(){localStorage.setItem('nm',this.value);gr.textContent=this.value.trim()?'Selamat mengajar, '+this.value.trim()+' 👋':'Selamat mengajar 👋';};
+function totalJP(hari){var d=data[hari]||[],t=0;for(var i=0;i<d.length;i++){if(d[i].m.indexOf('Istirahat')==-1)t+=hJP(d[i].d,d[i].e)}return t}
+function renderTabs(){var html='';for(var i=0;i<HARI.length;i++){var h=HARI[i],a=(h==hi)?' active':'';var jj=data[h]||[],cnt=0;for(var k=0;k<jj.length;k++){if(jj[k].m.indexOf('Istirahat')==-1)cnt++}html+='<button class="tab'+a+'" data-h="'+h+'">'+h+' <span class="badge">'+cnt+' \u00b7 '+totalJP(h)+'JP</span></button>'}tabs.innerHTML=html;var btns=tabs.querySelectorAll('.tab');for(var i=0;i<btns.length;i++){btns[i].onclick=function(){hi=this.getAttribute('data-h');renderAll()}}}
+function renderBody(){var d=data[hi]||[];if(d.length==0){body.innerHTML='<div class="empty">🎉 Libur ngajar!</div>';return}var html='',jpH=totalJP(hi);for(var i=0;i<d.length;i++){var r=d[i],is=r.m.indexOf('Istirahat')!=-1;var jp=hJP(r.d,r.e);var jpL=is?'':'<div class="jp-under">'+jp+' JP</div>';html+='<div class="card'+(is?' istirahat':'')+'"><div class="time"><span class="start">'+SLOT[r.d].a+'</span><span class="end">'+SLOT[r.e].b+'</span>'+jpL+'</div><div class="info">'+(is?'<div class="label-istirahat">☕ '+r.m+'</div>':'<h3>'+r.m+'</h3><p>🏫 Kelas '+r.k+'</p>')+'</div></div>'}html+='<div style="text-align:center;padding:8px;font-size:.75rem;color:#64748b">📊 Total: '+jpH+' JP</div>';body.innerHTML=html}
+function renderAll(){renderTabs();renderBody()}
+renderAll();
+var modal=document.getElementById('modalEdit'),mf=document.getElementById('modalFields');
+function esc(s){return(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+function buatOptSlot(sl){var s='';for(var i=0;i<SLOT.length;i++){s+='<option value="'+i+'"'+(i==sl?' selected':'')+'>'+SLOT[i].l+' ('+SLOT[i].a+'-'+SLOT[i].b+')</option>'}return s}
+function buatOptMapel(sl){var s='<option value="Istirahat">☕ Istirahat</option>';for(var i=0;i<MAPEL.length;i++){s+='<option value="'+esc(MAPEL[i])+'"'+(MAPEL[i]==sl?' selected':'')+'>'+MAPEL[i]+'</option>'}return s}
+function updRow(row){var d=parseInt(row.querySelector('.inp-d').value),e=parseInt(row.querySelector('.inp-e').value),m=row.querySelector('.inp-m').value,k=row.querySelector('.inp-k'),jpEl=row.querySelector('.jp-hitung');if(m=='Istirahat'||isIst(d)){row.classList.add('istirahat-row');k.value='';k.disabled=true;jpEl.textContent='-'}else{row.classList.remove('istirahat-row');k.disabled=false;jpEl.textContent=hJP(d,e)+' JP'}}
+function buatRow(ent){var is=ent.m.indexOf('Istirahat')!=-1,cl=is?' entry-row istirahat-row':' entry-row',dis=is?' disabled':'';return'<div class="'+cl+'"><select class="inp-d" onchange="rowChange(this)">'+buatOptSlot(ent.d)+'</select><select class="inp-e" onchange="rowChange(this)">'+buatOptSlot(ent.e)+'</select><select class="inp-m" onchange="rowChange(this)">'+buatOptMapel(is?'Istirahat':ent.m)+'</select><input type="text" class="inp-k" value="'+esc(ent.k)+'" placeholder="Kelas"'+dis+'><button class="btn-hapus" onclick="hapusRow(this)" title="Hapus">✕</button><div class="jp-hitung" style="grid-column:1/5;text-align:right;padding-right:4px">'+(is?'-':hJP(ent.d,ent.e)+' JP')+'</div></div>'}
+function rowChange(el){updRow(el.closest('.entry-row'))}
+function hapusRow(btn){btn.closest('.entry-row').remove()}
+function tambahRow(h){var c=document.getElementById('c-'+h),d=document.createElement('div');d.innerHTML=buatRow({d:0,e:0,m:'Matematika',k:''});c.insertBefore(d.firstElementChild,c.lastElementChild)}
+function openModal(){var html='';for(var i=0;i<HARI.length;i++){var h=HARI[i],entries=data[h]||[];html+='<div class="modal-hari"><h3>'+h+'</h3><div id="c-'+h+'">';for(var j=0;j<entries.length;j++)html+=buatRow(entries[j]);html+='<div class="btn-tambah" onclick="tambahRow(\''+h+'\')">+ Tambah</div></div></div>'}mf.innerHTML=html;modal.classList.add('show')}
+function simpanDariModal(){for(var i=0;i<HARI.length;i++){var h=HARI[i],c=document.getElementById('c-'+h);if(!c)continue;var rows=c.querySelectorAll('.entry-row'),hasil=[];for(var j=0;j<rows.length;j++){var row=rows[j],d=parseInt(row.querySelector('.inp-d').value),e=parseInt(row.querySelector('.inp-e').value),m=row.querySelector('.inp-m').value,k=(m=='Istirahat'||isIst(d))?'':row.querySelector('.inp-k').value||'';hasil.push({d:d,e:e,m:m,k:k})}data[h]=hasil}simpan();renderAll();modal.classList.remove('show')}
+document.getElementById('btnOpenEdit').onclick=openModal;
+document.getElementById('btnBatal').onclick=function(){modal.classList.remove('show')};
+document.getElementById('btnSimpan').onclick=simpanDariModal;
+document.getElementById('btnReset').onclick=function(){if(confirm('Reset ke jadwal awal?')){resetData();modal.classList.remove('show')}};
+modal.onclick=function(e){if(e.target==modal)modal.classList.remove('show')};
+</script>
+</body>
+</html>
